@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gerrard — Senior Graphic Designer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&family=Noto+Serif+Ethiopic:wght@500;600&family=Noto+Sans+Ethiopic:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#15161c;
+    --paper:#eef0f2;
+    --sheet:#ffffff;
+    --magenta:#e31c79;
+    --cyan:#00a7c4;
+    --yellow:#f2b600;
+    --text:#1c1e24;
+    --text-soft:#63666f;
+    --text-faint:#9a9ca3;
+    --line:#e1e3e7;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{
+    font-family:'Inter','Noto Sans Ethiopic',sans-serif;
+    background:var(--paper);
+    color:var(--text);
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    padding:32px 16px 60px;
+  }
+  .toolbar{display:flex;gap:10px;margin-bottom:26px;flex-wrap:wrap;justify-content:center;}
+  .toolbar button,.toolbar a{
+    font-family:'Inter',sans-serif;font-weight:600;font-size:13.5px;
+    padding:11px 24px;border-radius:999px;border:none;cursor:pointer;
+    display:inline-flex;align-items:center;gap:8px;text-decoration:none;
+    transition:transform .15s ease, background .15s ease;
+  }
+  .toolbar .dl{background:var(--ink);color:#fff;}
+  .toolbar .dl:hover{transform:translateY(-2px);background:var(--magenta);}
+  .toolbar .sec{background:#fff;color:var(--ink);border:1.5px solid var(--line);}
+  .toolbar .sec:hover{border-color:var(--ink);transform:translateY(-2px);}
+  .toolbar .lang{background:#fff;color:var(--ink);border:1.5px solid var(--ink);}
+  .toolbar .lang.active{background:var(--ink);color:#fff;}
+
+  #page{position:relative;width:210mm;height:297mm;background:var(--sheet);
+    overflow:hidden;display:flex;flex-direction:column;
+    box-shadow:0 1px 3px rgba(20,20,30,.08), 0 20px 40px -20px rgba(20,20,30,.25);}
+  .crop{position:absolute;width:14px;height:14px;pointer-events:none;z-index:2;}
+  .crop::before,.crop::after{content:"";position:absolute;background:var(--ink);}
+  .crop::before{width:14px;height:1px;top:7px;left:0;}
+  .crop::after{width:1px;height:14px;left:7px;top:0;}
+  .crop.tl{top:10px;left:10px;} .crop.tr{top:10px;right:10px;}
+  .crop.tl::before,.crop.tl::after,.crop.tr::before,.crop.tr::after{background:#c9cbd3;}
+  .crop.bl{bottom:10px;left:10px;} .crop.br{bottom:10px;right:10px;}
+
+  .band{display:flex;justify-content:space-between;align-items:center;
+    padding:9px 34px;background:var(--ink);color:#c9cbd3;flex:none;
+    font-family:'IBM Plex Mono','Noto Sans Ethiopic',monospace;font-size:9.5px;letter-spacing:.09em;
+    text-transform:uppercase;}
+  .band .dots span{display:inline-block;width:6px;height:6px;border-radius:50%;margin-left:5px;}
+  .band .dots span:nth-child(1){background:var(--cyan);}
+  .band .dots span:nth-child(2){background:var(--magenta);}
+  .band .dots span:nth-child(3){background:var(--yellow);}
+  .band .dots span:nth-child(4){background:#fff;}
+
+  .hdr{padding:26px 34px 20px;display:flex;justify-content:space-between;
+    align-items:flex-end;gap:24px;border-bottom:3px solid var(--ink);flex:none;}
+  .hdr h1{font-family:'Fraunces','Noto Serif Ethiopic',serif;font-weight:600;font-size:38px;
+    letter-spacing:-0.01em;color:var(--ink);line-height:1;}
+  .hdr .role{font-family:'IBM Plex Mono','Noto Sans Ethiopic',monospace;font-size:11px;font-weight:600;
+    letter-spacing:.11em;text-transform:uppercase;color:var(--magenta);margin-top:8px;}
+  .hdr .tagline{font-size:12px;color:var(--text-soft);max-width:360px;margin-top:10px;line-height:1.5;}
+  .con{text-align:right;font-size:11.5px;line-height:2;color:var(--text-soft);white-space:nowrap;}
+  .con a{color:var(--ink);text-decoration:none;font-weight:600;}
+  .con a:hover{color:var(--magenta);}
+
+  .bd{padding:22px 34px 24px;display:grid;grid-template-columns:1fr 218px;gap:32px;
+    flex:1;min-height:0;}
+
+  .reg{display:inline-flex;align-items:center;gap:7px;margin-bottom:13px;}
+  .reg .mark{position:relative;width:14px;height:14px;flex:none;}
+  .reg .mark span{position:absolute;border-radius:50%;width:14px;height:14px;mix-blend-mode:multiply;}
+  .reg .mark span:nth-child(1){background:var(--cyan);left:-2px;}
+  .reg .mark span:nth-child(2){background:var(--magenta);left:2px;}
+  .reg h2{font-family:'IBM Plex Mono','Noto Sans Ethiopic',monospace;font-size:11.5px;font-weight:600;
+    letter-spacing:.08em;text-transform:uppercase;color:var(--ink);}
+
+  .job{margin-bottom:13px;padding-left:16px;border-left:2px solid var(--line);position:relative;
+    break-inside:avoid;page-break-inside:avoid;}
+  .job:hover{border-left-color:var(--magenta);}
+  .job .per{font-family:'IBM Plex Mono','Noto Sans Ethiopic',monospace;font-size:9px;font-weight:600;
+    color:var(--magenta);letter-spacing:.05em;text-transform:uppercase;}
+  .job h3{font-family:'Fraunces','Noto Serif Ethiopic',serif;font-weight:600;font-size:14.5px;margin-top:3px;color:var(--ink);}
+  .job .co{color:var(--text-soft);font-size:11px;font-weight:600;}
+  .job p{margin-top:5px;color:var(--text-soft);font-size:10.5px;line-height:1.55;}
+
+  .ach{list-style:none;}
+  .ach li{padding:4px 0 4px 20px;position:relative;font-size:10.5px;color:var(--text-soft);
+    line-height:1.5;break-inside:avoid;page-break-inside:avoid;}
+  .ach li::before{content:"";position:absolute;left:0;top:10px;width:7px;height:7px;
+    background:var(--yellow);}
+
+  .sec{break-inside:avoid;page-break-inside:avoid;}
+
+  .sd .reg h2{font-size:10.5px;}
+  .ssec{margin-bottom:16px;break-inside:avoid;page-break-inside:avoid;}
+  .sk{margin-bottom:8px;}
+  .sk .lbl{display:flex;justify-content:space-between;font-size:10.5px;font-weight:600;margin-bottom:4px;}
+  .sk .lbl span:last-child{font-family:'IBM Plex Mono','Noto Sans Ethiopic',monospace;color:var(--text-faint);font-size:8.5px;font-weight:600;}
+  .trk{height:4px;background:var(--paper);position:relative;}
+  .trk .fl{height:100%;background:var(--ink);position:relative;}
+  .trk .fl::after{content:"";position:absolute;right:0;top:0;width:4px;height:100%;background:var(--magenta);}
+
+  .edu{margin-bottom:10px;}
+  .edu .per{font-family:'IBM Plex Mono','Noto Sans Ethiopic',monospace;font-size:9px;font-weight:600;color:var(--text-faint);letter-spacing:.04em;}
+  .edu h4{font-family:'Fraunces','Noto Serif Ethiopic',serif;font-size:12px;font-weight:600;margin-top:3px;color:var(--ink);}
+  .edu .sc{font-size:10.5px;color:var(--text-soft);}
+
+  .tags{display:flex;flex-wrap:wrap;gap:6px;}
+  .tags span{padding:4px 10px;background:var(--paper);font-size:9px;font-weight:600;color:var(--ink);
+    border:1px solid var(--line);}
+
+  .lang-item{display:flex;justify-content:space-between;font-size:10.5px;padding:5px 0;border-bottom:1px solid var(--line);}
+  .lang-item:last-child{border-bottom:none;}
+  .lang-item .lv{color:var(--text-faint);font-family:'IBM Plex Mono','Noto Sans Ethiopic',monospace;font-size:9px;}
+
+  .port{font-size:10px;color:var(--text-soft);line-height:1.55;padding:10px;background:var(--paper);
+    border-left:3px solid var(--magenta);}
+
+  @media print{
+    @page{size:A4;margin:0;}
+    html,body{background:#fff;padding:0;margin:0;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+    .toolbar{display:none;}
+    #page{box-shadow:none;width:210mm;height:297mm;overflow:hidden;}
+  }
+  @media (max-width:800px){
+    #page{width:100%;}
+    .hdr{flex-direction:column;align-items:flex-start;}
+    .con{text-align:left;}
+    .bd{grid-template-columns:1fr;}
+  }
+</style>
+</head>
+<body>
+
+<div class="toolbar">
+  <button class="dl" onclick="window.print()">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+    Download PDF
+  </button>
+  <button class="lang active" id="btn-en" onclick="setLang('en')">English</button>
+  <button class="lang" id="btn-am" onclick="setLang('am')">አማርኛ</button>
+  <a href="index.html" class="sec">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+    Back
+  </a>
+</div>
+
+<div id="page">
+  <div class="crop tl"></div><div class="crop tr"></div>
+  <div class="crop bl"></div><div class="crop br"></div>
+
+  <div class="band">
+    <span data-en="Proof — Curriculum Vitae" data-am="ፕሩፍ — ሲቪ">Proof — Curriculum Vitae</span>
+    <span class="dots"><span></span><span></span><span></span><span></span></span>
+  </div>
+
+  <div class="hdr">
+    <div>
+      <h1>Gerrard</h1>
+      <div class="role" data-en="Senior Graphic Designer" data-am="ከፍተኛ ግራፊክ ዲዛይነር">Senior Graphic Designer</div>
+      <p class="tagline" data-en="Brand identity, print &amp; packaging designer with 6+ years building visual systems for modern businesses." data-am="ከ6 ዓመታት በላይ ልምድ ያለው የብራንድ መለያ፣ ህትመት እና ማሸጊያ ዲዛይነር፣ ለዘመናዊ ንግዶች የእይታ ሥርዓቶችን የሚገነባ።">Brand identity, print &amp; packaging designer with 6+ years building visual systems for modern businesses.</p>
+    </div>
+    <div class="con">
+      jayjoy.design@gmail.com<br>
+      +251 945 717 817<br>
+      <span data-en="Addis Ababa, Ethiopia" data-am="አዲስ አበባ፣ ኢትዮጵያ">Addis Ababa, Ethiopia</span><br>
+      <a href="#">@jayjoy0</a> · <a href="#">@jay.joy2</a>
+    </div>
+  </div>
+
+  <div class="bd">
+    <div class="mn">
+
+      <div class="sec">
+        <div class="reg"><span class="mark"><span></span><span></span></span><h2 data-en="Experience" data-am="የሥራ ልምድ">Experience</h2></div>
+
+        <div class="job">
+          <div class="per">2023 — <span data-en="Present" data-am="እስከ አሁን">Present</span></div>
+          <h3 data-en="Senior Graphic Designer" data-am="ከፍተኛ ግራፊክ ዲዛይነር">Senior Graphic Designer</h3>
+          <div class="co">Northwind Studio</div>
+          <p data-en="Leading design for brand and print clients, mentoring junior designers, and running the studio's internal design system. Spearheaded 15+ major brand identity projects." data-am="ለብራንድ እና ለህትመት ደንበኞች ዲዛይን በመምራት፣ ጀማሪ ዲዛይነሮችን በማሰልጠን፣ እና የስቱዲዮውን ውስጣዊ የዲዛይን ሥርዓት በማስተዳደር ላይ እገኛለሁ። ከ15 በላይ ዋና ዋና የብራንድ መለያ ፕሮጀክቶችን መርቻለሁ።">Leading design for brand and print clients, mentoring junior designers, and running the studio's internal design system. Spearheaded 15+ major brand identity projects.</p>
+        </div>
+        <div class="job">
+          <div class="per">2021 — 2023</div>
+          <h3 data-en="Graphic Designer" data-am="ግራፊክ ዲዛይነር">Graphic Designer</h3>
+          <div class="co">Fieldwork Creative</div>
+          <p data-en="Owned the visual identity for 10+ client projects across packaging, editorial, and digital marketing. Delivered print-ready production files for national campaigns." data-am="ከ10 በላይ ለሆኑ ደንበኞች ፕሮጀክቶች በማሸጊያ፣ በህትመት ውጤቶች እና በዲጂታል ማርኬቲንግ ዘርፎች የእይታ መለያን በበላይነት አስተዳድሬያለሁ። ለሀገር አቀፍ ዘመቻዎች ለህትመት ዝግጁ የሆኑ ፋይሎችን አቅርቤያለሁ።">Owned the visual identity for 10+ client projects across packaging, editorial, and digital marketing. Delivered print-ready production files for national campaigns.</p>
+        </div>
+        <div class="job">
+          <div class="per">2019 — 2021</div>
+          <h3 data-en="Junior Graphic Designer" data-am="ጀማሪ ግራፊክ ዲዛይነር">Junior Graphic Designer</h3>
+          <div class="co">Harbor Digital Agency</div>
+          <p data-en="Delivered brand and print projects for 15+ clients spanning wellness, hospitality and consumer goods. Built and maintained client brand guidelines." data-am="ከ15 በላይ ደንበኞች ጋር በጤና እንክብካቤ፣ በእንግዳ ተቀባይነት እና በሸማች ምርቶች ዘርፎች የብራንድ እና የህትመት ፕሮጀክቶችን አቅርቤያለሁ። የደንበኞችን የብራንድ መመሪያዎች ገንብቻለሁ እንዲሁም አስተዳድሬያለሁ።">Delivered brand and print projects for 15+ clients spanning wellness, hospitality and consumer goods. Built and maintained client brand guidelines.</p>
+        </div>
+        <div class="job" style="border-left-color:var(--line);margin-bottom:0;">
+          <div class="per">2018 — 2019</div>
+          <h3 data-en="Production Artist" data-am="የፕሮዳክሽን አርቲስት">Production Artist</h3>
+          <div class="co">Lumen Interactive</div>
+          <p data-en="Prepared print-ready files, managed production specs, and maintained quality control across all output. Reduced pre-press errors by 30%." data-am="ለህትመት ዝግጁ የሆኑ ፋይሎችን አዘጋጅቻለሁ፣ የፕሮዳክሽን ዝርዝሮችን አስተዳድሬያለሁ፣ እና በሁሉም ውጤቶች ላይ የጥራት ቁጥጥር አድርጌያለሁ። ቅድመ-ህትመት ስህተቶችን በ30% ቀንሻለሁ።">Prepared print-ready files, managed production specs, and maintained quality control across all output. Reduced pre-press errors by 30%.</p>
+        </div>
+      </div>
+
+      <div class="sec">
+        <div class="reg"><span class="mark"><span></span><span></span></span><h2 data-en="Key achievements" data-am="ዋና ስኬቶች">Key achievements</h2></div>
+        <ul class="ach">
+          <li data-en="Designed award-winning brand identity for Nova Labs — featured in Design Week" data-am="ለNova Labs ሽልማት ያገኘ የብራንድ መለያ ዲዛይን አድርጌያለሁ — በDesign Week ላይ ቀርቧል">Designed award-winning brand identity for Nova Labs — featured in Design Week</li>
+          <li data-en="Built and rolled out a studio-wide design system adopted across 5 client accounts" data-am="በ5 የደንበኛ አካውንቶች ላይ የተተገበረ የስቱዲዮ አቀፍ የዲዛይን ሥርዓት ገንብቼ አሰራጭቻለሁ">Built and rolled out a studio-wide design system adopted across 5 client accounts</li>
+          <li data-en="Cut packaging pre-press error rate by 30% through tighter production QC" data-am="በጥብቅ የፕሮዳክሽን ጥራት ቁጥጥር አማካኝነት የማሸጊያ ቅድመ-ህትመት ስህተት መጠንን በ30% ቀንሻለሁ">Cut packaging pre-press error rate by 30% through tighter production QC</li>
+          <li data-en="Mentored 4 junior designers, two promoted to mid-level within a year" data-am="4 ጀማሪ ዲዛይነሮችን አሰልጥኛለሁ፣ ከነዚህ ውስጥ ሁለቱ በአንድ ዓመት ውስጥ ወደ መካከለኛ ደረጃ አድገዋል">Mentored 4 junior designers, two promoted to mid-level within a year</li>
+        </ul>
+      </div>
+
+    </div>
+
+    <div class="sd">
+
+      <div class="ssec">
+        <div class="reg"><span class="mark"><span></span><span></span></span><h2 data-en="Skills" data-am="ክህሎቶች">Skills</h2></div>
+        <div class="sk"><div class="lbl"><span data-en="Brand identity" data-am="የብራንድ መለያ">Brand identity</span><span data-en="EXPERT" data-am="ኤክስፐርት">EXPERT</span></div><div class="trk"><div class="fl" style="width:95%"></div></div></div>
+        <div class="sk"><div class="lbl"><span data-en="Print &amp; packaging" data-am="ህትመት እና ማሸጊያ">Print &amp; packaging</span><span data-en="EXPERT" data-am="ኤክስፐርት">EXPERT</span></div><div class="trk"><div class="fl" style="width:92%"></div></div></div>
+        <div class="sk"><div class="lbl"><span data-en="Typography" data-am="ታይፖግራፊ">Typography</span><span data-en="ADVANCED" data-am="የላቀ">ADVANCED</span></div><div class="trk"><div class="fl" style="width:88%"></div></div></div>
+        <div class="sk"><div class="lbl"><span data-en="Editorial layout" data-am="የህትመት ገፅ አቀማመጥ">Editorial layout</span><span data-en="ADVANCED" data-am="የላቀ">ADVANCED</span></div><div class="trk"><div class="fl" style="width:82%"></div></div></div>
+        <div class="sk"><div class="lbl"><span data-en="Digital &amp; social" data-am="ዲጂታል እና ማህበራዊ ሚዲያ">Digital &amp; social</span><span data-en="PROFICIENT" data-am="ጥሩ ችሎታ">PROFICIENT</span></div><div class="trk"><div class="fl" style="width:70%"></div></div></div>
+      </div>
+
+      <div class="ssec">
+        <div class="reg"><span class="mark"><span></span><span></span></span><h2 data-en="Tools" data-am="መሳሪያዎች">Tools</h2></div>
+        <div class="tags">
+          <span>Illustrator</span><span>InDesign</span><span>Photoshop</span>
+        </div>
+      </div>
+
+      <div class="ssec">
+        <div class="reg"><span class="mark"><span></span><span></span></span><h2 data-en="Education" data-am="ትምህርት">Education</h2></div>
+        <div class="edu">
+          <div class="per">2014 — 2018</div>
+          <h4 data-en="BA, Graphic Design" data-am="ባችለር ዲግሪ፣ ግራፊክ ዲዛይን">BA, Graphic Design</h4>
+          <div class="sc">School of Visual Arts</div>
+        </div>
+      </div>
+
+      <div class="ssec">
+        <div class="reg"><span class="mark"><span></span><span></span></span><h2 data-en="Languages" data-am="ቋንቋዎች">Languages</h2></div>
+        <div class="lang-item"><span data-en="English" data-am="እንግሊዝኛ">English</span><span class="lv" data-en="FLUENT" data-am="አቀላጥፎ የሚናገር">FLUENT</span></div>
+        <div class="lang-item"><span data-en="Amharic" data-am="አማርኛ">Amharic</span><span class="lv" data-en="NATIVE" data-am="የአፍ መፍቻ ቋንቋ">NATIVE</span></div>
+      </div>
+
+      <div class="ssec">
+        <div class="reg"><span class="mark"><span></span><span></span></span><h2 data-en="Portfolio" data-am="ፖርትፎሊዮ">Portfolio</h2></div>
+        <div class="port" data-en="Full case studies, packaging mockups and brand books available on request or via portfolio link." data-am="ሙሉ የጉዳይ ጥናቶች፣ የማሸጊያ ናሙናዎች እና የብራንድ መጽሐፍት በጥያቄ ወይም በፖርትፎሊዮ ሊንክ ይገኛሉ።">Full case studies, packaging mockups and brand books available on request or via portfolio link.</div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+function setLang(lang){
+  document.querySelectorAll('[data-en]').forEach(function(el){
+    el.textContent = lang === 'am' ? el.getAttribute('data-am') : el.getAttribute('data-en');
+  });
+  document.getElementById('btn-en').classList.toggle('active', lang === 'en');
+  document.getElementById('btn-am').classList.toggle('active', lang === 'am');
+  document.documentElement.lang = lang;
+  document.getElementById('page').dataset.lang = lang;
+}
+</script>
+
+</body>
+</html>
