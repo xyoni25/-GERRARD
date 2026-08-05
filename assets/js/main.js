@@ -1,337 +1,269 @@
-/* =========================================================
-   THEME
-   ========================================================= */
-(function initTheme(){
-  const saved = localStorage.getItem('theme');
-  if(saved) document.documentElement.setAttribute('data-theme', saved);
-})();
+/* =========================================================================
+   GERRARD — main.js
+   Mobile nav · theme toggle · scroll reveal · typing effect · skill bars ·
+   back-to-top · portfolio filter + lightbox · contact form · footer year
+   ========================================================================= */
+(function () {
+  "use strict";
 
-function setupThemeToggle(){
-  const btn = document.querySelector('.theme-toggle');
-  if(!btn) return;
-  btn.addEventListener('click', () => {
-    const current = document.documentElement.getAttribute('data-theme');
-    const next = current === 'dark' ? 'light' : 'dark';
-    document.documentElement.setAttribute('data-theme', next);
-    localStorage.setItem('theme', next);
-  });
-}
-
-/* =========================================================
-   LANGUAGE SWITCHER — ENGLISH / AMHARIC
-   ========================================================= */
-let currentLang = localStorage.getItem('lang') || 'en';
-
-function setLang(lang){
-  currentLang = lang;
-  localStorage.setItem('lang', lang);
-  document.documentElement.setAttribute('lang', lang === 'am' ? 'am' : 'en');
-  applyTranslations();
-  updateLangToggleUI();
-}
-
-function applyTranslations(){
-  const dict = TRANSLATIONS[currentLang];
-  if(!dict) return;
-
-  // Translate text-bearing elements with data-i18n
-  document.querySelectorAll('[data-i18n]').forEach(el => {
-    const key = el.dataset.i18n;
-    const text = dict[key];
-    if(text === undefined) return;
-
-    if(el.tagName === 'INPUT' || el.tagName === 'TEXTAREA'){
-      if(el.getAttribute('placeholder') !== null){
-        el.setAttribute('placeholder', text);
-      } else {
-        el.value = text;
-      }
-    } else if(el.tagName === 'IMG'){
-      el.setAttribute('alt', text);
-    } else {
-      el.textContent = text;
-    }
-  });
-}
-
-function updateLangToggleUI(){
-  const btn = document.querySelector('.lang-toggle');
-  if(!btn) return;
-  btn.textContent = currentLang === 'am' ? 'ENG' : 'AM';
-}
-
-function setupLangToggle(){
-  const btn = document.querySelector('.lang-toggle');
-  if(!btn) return;
-  btn.addEventListener('click', () => {
-    const next = currentLang === 'en' ? 'am' : 'en';
-    setLang(next);
-  });
-  // Init UI
-  updateLangToggleUI();
-}
-
-/* =========================================================
-   MOBILE NAV
-   ========================================================= */
-function setupMobileNav(){
-  const toggle = document.getElementById('navToggle');
-  const panel = document.getElementById('mobilePanel');
-  if(!toggle || !panel) return;
-  toggle.addEventListener('click', () => {
-    toggle.classList.toggle('open');
-    panel.classList.toggle('open');
-  });
-  panel.querySelectorAll('a').forEach(a => a.addEventListener('click', () => {
-    toggle.classList.remove('open');
-    panel.classList.remove('open');
-  }));
-}
-
-/* =========================================================
-   ACTIVE NAV
-   ========================================================= */
-function setupActiveNav(){
-  const path = location.pathname.split('/').pop() || 'index.html';
-  document.querySelectorAll('.nav-links a, .mobile-panel a').forEach(a => {
-    if(a.getAttribute('href') === path){
-      a.classList.add('current');
-    }
-  });
-}
-
-/* =========================================================
-   SCROLL REVEAL
-   ========================================================= */
-function setupReveal(){
-  const el = document.querySelectorAll('.reveal');
-  if(!el.length) return;
-  const obs = new IntersectionObserver((entries) => {
-    entries.forEach(e => {
-      if(e.isIntersecting){
-        e.target.classList.add('in');
-        obs.unobserve(e.target);
-      }
-    });
-  }, { threshold: 0.1 });
-  el.forEach((item, i) => {
-    item.style.transitionDelay = (i % 4) * 0.08 + 's';
-    obs.observe(item);
-  });
-}
-
-/* =========================================================
-   SKILL BARS
-   ========================================================= */
-function setupSkillBars(){
-  const bars = document.querySelectorAll('.skill-fill');
-  if(!bars.length) return;
-  const obs = new IntersectionObserver((entries) => {
-    entries.forEach(e => {
-      if(e.isIntersecting){
-        const el = e.target;
-        el.style.width = el.getAttribute('data-fill') || '0%';
-        obs.unobserve(el);
-      }
-    });
-  }, { threshold: 0.3 });
-  bars.forEach((b, i) => {
-    b.style.transitionDelay = i * 0.1 + 's';
-    obs.observe(b);
-  });
-}
-
-/* =========================================================
-   TYPING ROLE
-   ========================================================= */
-function setupTypingRole(){
-  const el = document.querySelector('[data-typing]');
-  if(!el) return;
-  const roles = JSON.parse(el.getAttribute('data-typing'));
-  let ri = 0, ci = 0, del = false;
-  function tick(){
-    const cur = roles[ri];
-    if(!del){
-      ci++;
-      el.textContent = cur.slice(0, ci);
-      if(ci === cur.length){ del = true; setTimeout(tick, 1400); return; }
-    } else {
-      ci--;
-      el.textContent = cur.slice(0, ci);
-      if(ci === 0){ del = false; ri = (ri + 1) % roles.length; }
-    }
-    setTimeout(tick, del ? 45 : 85);
-  }
-  tick();
-}
-
-/* =========================================================
-   BACK TO TOP
-   ========================================================= */
-function setupToTop(){
-  const btn = document.querySelector('.to-top');
-  if(!btn) return;
-  window.addEventListener('scroll', () => btn.classList.toggle('show', window.scrollY > 500));
-  btn.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
-}
-
-/* =========================================================
-   PORTFOLIO FILTER + LIGHTBOX
-   ========================================================= */
-function setupPortfolio(){
-  const filterBar = document.getElementById('filterBar');
-  const grid = document.getElementById('projectGrid');
-  if(!filterBar || !grid) return;
-
-  const PROJECTS = [
-    { no:'01', img:'work/product.jpg', title:'Nova Brand Identity', desc:'A polished identity system for a finance brand that balances clarity with premium style.', medium:'Identity System', year:'2024', category:'brand' },
-    { no:'02', img:'work/logo1.1.jpg', title:'Logo & Identity System', desc:'A distinctive brand system built around custom marks, color and typography.', medium:'Logo Design', year:'2023', category:'brand' },
-    { no:'03', img:'work/bag%20mokup.jpg', title:'Wellness Packaging', desc:'A tactile packaging concept for wellness products with a premium visual language.', medium:'Brand Design', year:'2024', category:'packaging' },
-    { no:'04', img:'work/a.jpg', title:'Editorial Spread', desc:'A bold publication layout designed for readability and vibrant storytelling.', medium:'Editorial', year:'2022', category:'print' },
-    { no:'05', img:'work/poster%201.jpg', title:'Poster Campaign', desc:'A visually striking print campaign designed for impact and readability.', medium:'Campaign', year:'2023', category:'print' },
-    { no:'06', img:'work/poster%202.jpg', title:'Event Poster', desc:'A bold event poster that combines expressive typography with strong imagery.', medium:'Poster', year:'2023', category:'print' },
-    { no:'07', img:'work/poster%203.jpg', title:'Promotional Poster', desc:'A campaign-ready poster layout created to capture attention in physical spaces.', medium:'Promotional', year:'2022', category:'print' },
-    { no:'08', img:'work/poster%204.jpg', title:'Poster Series', desc:'Visual messaging designed for impact across event and campaign print materials.', medium:'Series', year:'2021', category:'print' },
-    { no:'09', img:'work/poster%205.jpg', title:'Flyer & Poster Set', desc:'A coordinated print set created for event promotion and digital sharing.', medium:'Collateral', year:'2021', category:'print' },
-    { no:'10', img:'work/bag%20mokup%20model.jpg', title:'Premium Packaging', desc:'A realistic product mockup conveying premium shelf presence and finish.', medium:'Mockup', year:'2024', category:'packaging' },
-    { no:'11', img:'work/logo%201.jpg', title:'Signature Mark', desc:'A signature-style logo concept with refined linework and color balance.', medium:'Logo', year:'2020', category:'brand' },
-    { no:'12', img:'work/logo%20type%20color.jpg', title:'Color Logo Variant', desc:'A bold logo variant built for vibrant brand applications and color-driven design.', medium:'Logo', year:'2020', category:'brand' },
-    { no:'13', img:'work/logo.png', title:'Logo Family', desc:'A suite of logo variations designed for flexible brand use across touchpoints.', medium:'Logo Family', year:'2021', category:'brand' },
-    { no:'14', img:'work/c.jpg', title:'Creative Asset', desc:'A creative brand asset designed to support campaign visuals and identity rollouts.', medium:'Asset', year:'2022', category:'brand' },
-  ];
-
-  const CATS = [
-    { key:'all', label:'All Work' },
-    { key:'brand', label:'Branding' },
-    { key:'print', label:'Print' },
-    { key:'packaging', label:'Packaging' },
-  ];
-
-  function count(key){ return key==='all' ? PROJECTS.length : PROJECTS.filter(p=>p.category===key).length; }
-
-  filterBar.innerHTML = CATS.map((c,i) =>
-    `<button class="filter-btn${i===0?' active':''}" data-filter="${c.key}">${c.label} <span class="count">${count(c.key)}</span></button>`
-  ).join('');
-
-  grid.innerHTML = PROJECTS.map((p,i) => `
-    <div class="pf-card" data-category="${p.category}" data-index="${i}">
-      <div class="pf-thumb">
-        <img src="${p.img}" alt="${p.title}" loading="lazy">
-        <span class="pf-tag ${p.category}">${p.category}</span>
-        <span class="pf-view"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg></span>
-      </div>
-      <div class="pf-body">
-        <span class="pf-no mono">No. ${p.no}</span>
-        <h3>${p.title}</h3>
-        <p class="desc">${p.desc}</p>
-        <div class="pf-spec"><span>${p.medium}</span><span>${p.year}</span></div>
-      </div>
-    </div>
-  `).join('');
-
-  const cards = grid.querySelectorAll('.pf-card');
-
-  /* filter */
-  filterBar.addEventListener('click', (e) => {
-    const btn = e.target.closest('.filter-btn');
-    if(!btn) return;
-    filterBar.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-    const f = btn.dataset.filter;
-    cards.forEach(c => c.classList.toggle('is-hidden', f !== 'all' && c.dataset.category !== f));
-  });
-
-  /* reveal on scroll */
-  const io = new IntersectionObserver((entries) => {
-    entries.forEach(e => { if(e.isIntersecting){ e.target.classList.add('in'); io.unobserve(e.target); } });
-  }, { threshold: 0.12 });
-  cards.forEach((c,i) => { c.style.transitionDelay = (i % 3) * 0.06 + 's'; io.observe(c); });
-
-  /* lightbox */
-  const lightbox = document.getElementById('lightbox');
-  if(!lightbox) return;
-  let currentIndex = 0;
-
-  function openLightbox(index){
-    currentIndex = index;
-    const p = PROJECTS[index];
-    document.getElementById('lbImage').src = p.img;
-    document.getElementById('lbImage').alt = p.title;
-    document.getElementById('lbJobNo').textContent = 'No. ' + p.no;
-    document.getElementById('lbTitle').textContent = p.title;
-    document.getElementById('lbDesc').textContent = p.desc;
-    document.getElementById('lbMedium').textContent = p.medium;
-    document.getElementById('lbYear').textContent = p.year;
-    lightbox.classList.add('open');
-    document.body.style.overflow = 'hidden';
-  }
-  function closeLightbox(){
-    lightbox.classList.remove('open');
-    document.body.style.overflow = '';
-  }
-  cards.forEach(c => {
-    c.addEventListener('click', () => openLightbox(parseInt(c.dataset.index, 10)));
-  });
-  document.getElementById('lightboxClose')?.addEventListener('click', closeLightbox);
-  document.getElementById('lbPrev')?.addEventListener('click', () => {
-    currentIndex = (currentIndex - 1 + PROJECTS.length) % PROJECTS.length;
-    openLightbox(currentIndex);
-  });
-  document.getElementById('lbNext')?.addEventListener('click', () => {
-    currentIndex = (currentIndex + 1) % PROJECTS.length;
-    openLightbox(currentIndex);
-  });
-  lightbox.addEventListener('click', (e) => { if(e.target === lightbox) closeLightbox(); });
-  document.addEventListener('keydown', (e) => {
-    if(!lightbox.classList.contains('open')) return;
-    if(e.key === 'Escape') closeLightbox();
-    if(e.key === 'ArrowRight') { currentIndex = (currentIndex + 1) % PROJECTS.length; openLightbox(currentIndex); }
-    if(e.key === 'ArrowLeft') { currentIndex = (currentIndex - 1 + PROJECTS.length) % PROJECTS.length; openLightbox(currentIndex); }
-  });
-}
-
-/* =========================================================
-   CONTACT FORM
-   ========================================================= */
-function setupContactForm(){
-  const form = document.getElementById('contact-form');
-  if(!form) return;
-  form.addEventListener('submit', (e) => {
-    e.preventDefault();
-    const status = form.querySelector('.form-status');
-    if(status){
-      status.textContent = 'Message sent — thanks for reaching out, I\'ll reply within a day or two.';
-      status.style.color = 'var(--accent)';
-      status.style.fontSize = '14px';
-    }
-    form.reset();
-  });
-}
-
-/* =========================================================
-   FOOTER YEAR
-   ========================================================= */
-function setupYear(){
-  document.querySelectorAll('[data-year]').forEach(el => {
+  /* ---------- Footer year ---------- */
+  document.querySelectorAll("[data-year]").forEach(function (el) {
     el.textContent = new Date().getFullYear();
   });
-}
 
-/* =========================================================
-   INIT
-   ========================================================= */
-document.addEventListener('DOMContentLoaded', () => {
-  setupThemeToggle();
-  setupLangToggle();
-  setupMobileNav();
-  setupActiveNav();
-  setupReveal();
-  setupSkillBars();
-  setupTypingRole();
-  setupToTop();
-  setupPortfolio();
-  setupContactForm();
-  setupYear();
-  // Apply saved lang
-  setLang(currentLang);
-});
+  /* ---------- Theme toggle (dark / light luxury) ---------- */
+  var root = document.documentElement;
+  var THEME_KEY = "gerrard-theme";
+  var stored = null;
+  try { stored = localStorage.getItem(THEME_KEY); } catch (e) {}
+  if (stored) root.setAttribute("data-theme", stored);
+
+  document.querySelectorAll(".theme-toggle").forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      var current = root.getAttribute("data-theme") === "light" ? "light" : "dark";
+      var next = current === "light" ? "dark" : "light";
+      if (next === "dark") root.removeAttribute("data-theme");
+      else root.setAttribute("data-theme", "light");
+      try { localStorage.setItem(THEME_KEY, next); } catch (e) {}
+    });
+  });
+
+  /* ---------- Mobile nav ---------- */
+  var navToggle = document.getElementById("navToggle");
+  var mobilePanel = document.getElementById("mobilePanel");
+  if (navToggle && mobilePanel) {
+    navToggle.addEventListener("click", function () {
+      navToggle.classList.toggle("is-open");
+      mobilePanel.classList.toggle("is-open");
+    });
+    mobilePanel.querySelectorAll("a").forEach(function (a) {
+      a.addEventListener("click", function () {
+        navToggle.classList.remove("is-open");
+        mobilePanel.classList.remove("is-open");
+      });
+    });
+  }
+
+  /* ---------- Mark current nav link ---------- */
+  var path = location.pathname.split("/").pop() || "index.html";
+  document.querySelectorAll(".nav-links a, .mobile-panel a").forEach(function (a) {
+    var href = a.getAttribute("href");
+    if (href === path) a.classList.add("current");
+  });
+
+  /* ---------- Scroll reveal ---------- */
+  var revealEls = document.querySelectorAll(".reveal");
+  if ("IntersectionObserver" in window && revealEls.length) {
+    var io = new IntersectionObserver(
+      function (entries) {
+        entries.forEach(function (entry) {
+          if (entry.isIntersecting) {
+            entry.target.classList.add("is-visible");
+            io.unobserve(entry.target);
+          }
+        });
+      },
+      { threshold: 0.12, rootMargin: "0px 0px -40px 0px" }
+    );
+    revealEls.forEach(function (el) { io.observe(el); });
+  } else {
+    revealEls.forEach(function (el) { el.classList.add("is-visible"); });
+  }
+
+  /* ---------- Back to top ---------- */
+  var toTop = document.querySelector(".to-top");
+  if (toTop) {
+    window.addEventListener("scroll", function () {
+      toTop.classList.toggle("is-visible", window.scrollY > 480);
+    });
+    toTop.addEventListener("click", function () {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    });
+  }
+
+  /* ---------- Typing effect (hero role) ---------- */
+  var typingEl = document.querySelector("[data-typing]");
+  if (typingEl) {
+    var words = [];
+    try { words = JSON.parse(typingEl.getAttribute("data-typing")); } catch (e) {}
+    if (words.length) {
+      var wi = 0, ci = 0, deleting = false;
+      var TYPE_SPEED = 55, DELETE_SPEED = 32, HOLD = 1600, GAP = 400;
+
+      var tick = function () {
+        var word = words[wi];
+        if (!deleting) {
+          ci++;
+          typingEl.textContent = word.slice(0, ci);
+          if (ci === word.length) {
+            deleting = true;
+            return setTimeout(tick, HOLD);
+          }
+          return setTimeout(tick, TYPE_SPEED);
+        } else {
+          ci--;
+          typingEl.textContent = word.slice(0, ci);
+          if (ci === 0) {
+            deleting = false;
+            wi = (wi + 1) % words.length;
+            return setTimeout(tick, GAP);
+          }
+          return setTimeout(tick, DELETE_SPEED);
+        }
+      };
+      typingEl.textContent = "";
+      setTimeout(tick, 500);
+    }
+  }
+
+  /* ---------- Skill bar fill animation ---------- */
+  var skillFills = document.querySelectorAll(".skill-fill[data-fill]");
+  if (skillFills.length) {
+    if ("IntersectionObserver" in window) {
+      var skillIo = new IntersectionObserver(
+        function (entries) {
+          entries.forEach(function (entry) {
+            if (entry.isIntersecting) {
+              entry.target.style.width = entry.target.getAttribute("data-fill");
+              skillIo.unobserve(entry.target);
+            }
+          });
+        },
+        { threshold: 0.4 }
+      );
+      skillFills.forEach(function (el) { skillIo.observe(el); });
+    } else {
+      skillFills.forEach(function (el) { el.style.width = el.getAttribute("data-fill"); });
+    }
+  }
+
+  /* ---------- Contact form (front-end only) ---------- */
+  var contactForm = document.getElementById("contact-form");
+  if (contactForm) {
+    contactForm.addEventListener("submit", function (e) {
+      e.preventDefault();
+      var status = contactForm.querySelector(".form-status");
+      var btn = contactForm.querySelector("button[type='submit']");
+      var originalLabel = btn.textContent;
+      btn.textContent = "Sending…";
+      btn.disabled = true;
+      setTimeout(function () {
+        btn.textContent = originalLabel;
+        btn.disabled = false;
+        if (status) {
+          status.textContent = "Thank you — your message has been received. I'll reply within 1–2 business days.";
+          status.style.color = "var(--gold)";
+        }
+        contactForm.reset();
+      }, 900);
+    });
+  }
+
+  /* ---------- Portfolio: data, filter, grid, lightbox ---------- */
+  var projectGrid = document.getElementById("projectGrid");
+  if (projectGrid) {
+    var projects = [
+      { id: "01", title: "Nova Banking Redesign", cat: "Product", tags: ["Product Design", "Mobile"], img: "work/product.jpg", desc: "A full visual and interaction overhaul for a digital banking app, focused on clarity, trust, and a premium everyday feel.", medium: "Mobile · UI", year: "2026" },
+      { id: "02", title: "Atlas Component Library", cat: "Systems", tags: ["Design Systems", "Web"], img: "work/logo1.1.jpg", desc: "A documented component library and token system built to keep a fast-moving product team consistent at scale.", medium: "Web · Design System", year: "2025" },
+      { id: "03", title: "Solace Wellness Rebrand", cat: "Branding", tags: ["Branding", "Web"], img: "work/bag%20mokup.jpg", desc: "Full identity relaunch for a wellness studio — logo system, packaging, and a refreshed web presence.", medium: "Branding · Web", year: "2025" },
+      { id: "04", title: "Meridian Packaging System", cat: "Packaging", tags: ["Packaging", "Print"], img: "work/bag%20mokup%20model.jpg", desc: "Modular packaging system for a specialty goods line, engineered for shelf presence and production efficiency.", medium: "Packaging · Print", year: "2024" },
+      { id: "05", title: "Lumen Mark & Wordmark", cat: "Branding", tags: ["Logo", "Identity"], img: "work/logo%201.jpg", desc: "A precise, versatile mark built to scale from favicon to storefront signage without losing character.", medium: "Identity", year: "2024" },
+      { id: "06", title: "Northbound Festival Poster", cat: "Print", tags: ["Print", "Editorial"], img: "work/poster%201.jpg", desc: "Limited-run poster series for an annual arts festival, screen-printed in two spot colors.", medium: "Print · Poster", year: "2023" }
+    ];
+
+    var categories = ["All"].concat(
+      projects.reduce(function (acc, p) { return acc.indexOf(p.cat) === -1 ? acc.concat(p.cat) : acc; }, [])
+    );
+
+    var filterBar = document.getElementById("filterBar");
+    var activeCat = "All";
+
+    function renderFilters() {
+      filterBar.innerHTML = "";
+      categories.forEach(function (cat) {
+        var b = document.createElement("button");
+        b.textContent = cat;
+        if (cat === activeCat) b.classList.add("is-active");
+        b.addEventListener("click", function () {
+          activeCat = cat;
+          renderFilters();
+          renderGrid();
+        });
+        filterBar.appendChild(b);
+      });
+    }
+
+    function renderGrid() {
+      projectGrid.innerHTML = "";
+      var list = activeCat === "All" ? projects : projects.filter(function (p) { return p.cat === activeCat; });
+      list.forEach(function (p, idx) {
+        var a = document.createElement("a");
+        a.href = "#";
+        a.className = "project-card reveal is-visible";
+        a.setAttribute("data-id", p.id);
+        a.innerHTML =
+          '<div class="project-thumb">' +
+            '<img src="' + p.img + '" alt="' + p.title + '" loading="lazy" onerror="this.closest(\'.project-thumb\').classList.add(\'img-fallback\')">' +
+            '<span class="project-thumb-tag">' + p.cat + '</span>' +
+          '</div>' +
+          '<div class="project-body">' +
+            '<h3>' + p.title + '</h3>' +
+            '<div class="project-tags">' + p.tags.map(function (t) { return '<span class="tag">' + t + '</span>'; }).join("") + '</div>' +
+          '</div>';
+        a.addEventListener("click", function (e) {
+          e.preventDefault();
+          openLightbox(list, idx);
+        });
+        projectGrid.appendChild(a);
+      });
+    }
+
+    renderFilters();
+    renderGrid();
+
+    /* Lightbox */
+    var lightbox = document.getElementById("lightbox");
+    var lbImage = document.getElementById("lbImage");
+    var lbTitle = document.getElementById("lbTitle");
+    var lbDesc = document.getElementById("lbDesc");
+    var lbJobNo = document.getElementById("lbJobNo");
+    var lbMedium = document.getElementById("lbMedium");
+    var lbYear = document.getElementById("lbYear");
+    var lbPrev = document.getElementById("lbPrev");
+    var lbNext = document.getElementById("lbNext");
+    var lbClose = document.getElementById("lightboxClose");
+    var currentList = [], currentIdx = 0;
+
+    function openLightbox(list, idx) {
+      currentList = list;
+      currentIdx = idx;
+      paint();
+      lightbox.classList.add("is-open");
+      document.body.style.overflow = "hidden";
+    }
+    function paint() {
+      var p = currentList[currentIdx];
+      lbImage.src = p.img;
+      lbImage.alt = p.title;
+      lbTitle.textContent = p.title;
+      lbDesc.textContent = p.desc;
+      lbJobNo.textContent = "JOB — " + p.id;
+      lbMedium.textContent = p.medium;
+      lbYear.textContent = p.year;
+    }
+    function closeLightbox() {
+      lightbox.classList.remove("is-open");
+      document.body.style.overflow = "";
+    }
+    if (lbClose) lbClose.addEventListener("click", closeLightbox);
+    if (lightbox) lightbox.addEventListener("click", function (e) { if (e.target === lightbox) closeLightbox(); });
+    if (lbPrev) lbPrev.addEventListener("click", function () { currentIdx = (currentIdx - 1 + currentList.length) % currentList.length; paint(); });
+    if (lbNext) lbNext.addEventListener("click", function () { currentIdx = (currentIdx + 1) % currentList.length; paint(); });
+    document.addEventListener("keydown", function (e) {
+      if (!lightbox.classList.contains("is-open")) return;
+      if (e.key === "Escape") closeLightbox();
+      if (e.key === "ArrowLeft" && lbPrev) lbPrev.click();
+      if (e.key === "ArrowRight" && lbNext) lbNext.click();
+    });
+  }
+})();
