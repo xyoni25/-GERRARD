@@ -1,19 +1,48 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<script>try{var t=localStorage.getItem("gerrard-theme");if(t==="light")document.documentElement.setAttribute("data-theme","light");}catch(e){}</script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>About — GERRARD</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 100 100%27%3E%3Crect width=%27100%27 height=%27100%27 rx=%2718%27 fill=%27%231B1815%27/%3E%3Ctext x=%2750%27 y=%2768%27 font-family=%27Georgia,serif%27 font-size=%2760%27 fill=%27%23B8873B%27 text-anchor=%27middle%27%3EG%3C/text%3E%3C/svg%3E">
 <meta name="description" content="Learn about GERRARD's background, design philosophy and the tools behind the work.">
+<script>try{if(localStorage.getItem("gerrard-theme")==="dark")document.documentElement.setAttribute("data-theme","dark");}catch(e){}</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,500&family=Inter:wght@400;500;600;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="assets/css/style.css">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,500&family=Inter:wght@400;500;600;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
 </head>
 <body>
 
-<script>var xhr=new XMLHttpRequest();xhr.open('GET','head.html',false);try{xhr.send(null);}catch(e){}if(xhr.status===200||xhr.status===0){document.write(xhr.responseText);}</script>
+<header class="site-header">
+  <div class="container nav-wrap">
+    <a href="index.html" class="brand"><span class="brand-mark">G</span><span class="brand-word">GERRARD</span></a>
+    <nav class="nav-links" id="navLinks">
+      <a href="index.html">Home</a>
+      <a href="about.html" class="active">About</a>
+      <a href="portfolio.html">Portfolio</a>
+      <a href="services.html">Services</a>
+      <a href="resume.html">Resume</a>
+      <a href="blog.html">Blog</a>
+      <a href="contact.html">Contact</a>
+      <a href="cv.html">CV</a>
+      <span class="nav-indicator" id="navIndicator"></span>
+    </nav>
+    <div class="nav-right">
+      <button class="theme-toggle" id="themeToggle" aria-label="Toggle light and dark theme">
+        <svg class="icon-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+        <svg class="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
+      </button>
+      <button class="nav-toggle" id="navToggle" aria-label="Toggle menu"><span></span><span></span><span></span></button>
+    </div>
+  </div>
+  <div class="mobile-panel" id="mobilePanel">
+    <div class="mobile-eyebrow">MENU</div>
+    <a href="index.html">Home</a><a href="about.html">About</a><a href="portfolio.html">Portfolio</a>
+    <a href="services.html">Services</a><a href="resume.html">Resume</a><a href="blog.html">Blog</a>
+    <a href="contact.html">Contact</a><a href="cv.html">CV</a>
+  </div>
+</header>
 
 <main>
 
@@ -24,17 +53,18 @@
       <p class="lede">A little about my background, how I approach a project, and the principles that guide my work as a graphic designer.</p>
       <div class="crumb"><a href="index.html">Home</a><span class="sep">/</span><span class="current">About</span></div>
     </div>
+  </section>
 
   <section>
     <div class="container" style="display:grid;grid-template-columns:.9fr 1.1fr;gap:56px;align-items:center;">
       <div class="reveal">
-        <div class="card" style="aspect-ratio:1/1;display:flex;align-items:center;justify-content:center;background:var(--bg-alt);overflow:hidden;position:relative;">
-          <img src="assets/x.jpg" alt="Designer portrait" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center;" />
-          <div style="position:absolute;inset:0;display:grid;place-items:center;font-family:'Archivo Black',sans-serif;font-size:clamp(64px,11vw,120px);color:var(--line);mix-blend-mode:overlay;opacity:.9;letter-spacing:-.03em;">G</div>
+        <div class="card" style="aspect-ratio:1/1;display:flex;align-items:center;justify-content:center;background:var(--bg-alt);overflow:hidden;position:relative;padding:0;">
+          <img src="assets/x.jpg" alt="Designer portrait" width="600" height="600" loading="lazy" decoding="async" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center;" />
+          <div style="position:absolute;inset:0;display:grid;place-items:center;font-family:var(--font-serif);font-size:clamp(64px,11vw,120px);color:var(--line);mix-blend-mode:overlay;opacity:.9;letter-spacing:-.03em;">G</div>
         </div>
       </div>
       <div class="reveal">
-        <h2 style="font-size:15px;font-family:'Space Mono',monospace;text-transform:uppercase;letter-spacing:.08em;color:var(--accent-dark);">Hi, I'm GERRARD</h2>
+        <h2 style="font-size:15px;font-family:var(--font-mono);text-transform:uppercase;letter-spacing:.08em;color:var(--accent-dark);">Hi, I'm GERRARD</h2>
         <p style="margin-top:16px;color:var(--ink-soft);font-size:16px;">I'm a graphic designer focused on creating bold, thoughtful visual identities that communicate clearly and leave a lasting impression. I work across branding, print, packaging, editorial design, and visual storytelling to shape memorable experiences.</p>
         <p style="margin-top:16px;color:var(--ink-soft);font-size:16px;">Outside client work, I enjoy refining visual systems, exploring new creative directions, and turning ideas into polished designs that feel timeless, intentional, and professionally crafted.</p>
         <div class="stat-strip" style="margin-top:30px;border-top:none;border-bottom:none;padding:20px 0;">
@@ -107,18 +137,9 @@
       <a href="index.html" class="brand"><span class="brand-mark">G</span> GERRARD</a>
       <p style="margin-top:14px;max-width:260px;font-size:14px;">Graphic designer building refined brand, print, and visual communication work for modern businesses.</p>
     </div>
-    <div>
-      <h4>Navigate</h4>
-      <ul><li><a href="about.html">About</a></li><li><a href="portfolio.html">Portfolio</a></li><li><a href="services.html">Services</a></li><li><a href="resume.html">Resume</a></li></ul>
-    </div>
-    <div>
-      <h4>Resources</h4>
-      <ul><li><a href="blog.html">Blog</a></li><li><a href="contact.html">Contact</a></li><li><a href="cv.html">Download CV</a></li></ul>
-    </div>
-    <div>
-      <h4>Get in touch</h4>
-      <ul><li><a href="tel:0945717817">0945717817</a></li><li><a href="https://t.me/jayjoy0">@jayjoy0</a></li><li><a href="https://instagram.com/jay.joy2">@jay.joy2</a></li></ul>
-    </div>
+    <div><h4>Navigate</h4><ul><li><a href="about.html">About</a></li><li><a href="portfolio.html">Portfolio</a></li><li><a href="services.html">Services</a></li><li><a href="resume.html">Resume</a></li></ul></div>
+    <div><h4>Resources</h4><ul><li><a href="blog.html">Blog</a></li><li><a href="contact.html">Contact</a></li><li><a href="cv.html">Download CV</a></li></ul></div>
+    <div><h4>Get in touch</h4><ul><li><a href="tel:0945717817">0945717817</a></li><li><a href="https://t.me/jayjoy0">@jayjoy0</a></li><li><a href="https://instagram.com/jay.joy2">@jay.joy2</a></li></ul></div>
   </div>
   <div class="footer-bottom">
     <span>© <span data-year></span> GERRARD. All rights reserved.</span>
@@ -128,6 +149,6 @@
 
 <button class="to-top" aria-label="Back to top"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 19V5M5 12l7-7 7 7"/></svg></button>
 
-<script src="assets/js/main.js"></script>
+<script src="assets/js/main.js" defer></script>
 </body>
 </html>

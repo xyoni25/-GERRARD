@@ -1,269 +1,304 @@
-/* =========================================================================
-   GERRARD — main.js
-   Mobile nav · theme toggle · scroll reveal · typing effect · skill bars ·
-   back-to-top · portfolio filter + lightbox · contact form · footer year
-   ========================================================================= */
-(function () {
+/* =========================================================
+   GERRARD — shared behaviour
+   Loaded once with `defer`; runs after DOM parse, non-blocking.
+   ========================================================= */
+(function(){
   "use strict";
 
-  /* ---------- Footer year ---------- */
-  document.querySelectorAll("[data-year]").forEach(function (el) {
-    el.textContent = new Date().getFullYear();
-  });
-
-  /* ---------- Theme toggle (dark / light luxury) ---------- */
-  var root = document.documentElement;
-  var THEME_KEY = "gerrard-theme";
-  var stored = null;
-  try { stored = localStorage.getItem(THEME_KEY); } catch (e) {}
-  if (stored) root.setAttribute("data-theme", stored);
-
-  document.querySelectorAll(".theme-toggle").forEach(function (btn) {
-    btn.addEventListener("click", function () {
-      var current = root.getAttribute("data-theme") === "light" ? "light" : "dark";
-      var next = current === "light" ? "dark" : "light";
-      if (next === "dark") root.removeAttribute("data-theme");
-      else root.setAttribute("data-theme", "light");
-      try { localStorage.setItem(THEME_KEY, next); } catch (e) {}
+  /* ---- Theme (persisted, applied pre-paint by the tiny inline
+     script in <head> to avoid a flash; this just wires the toggle) ---- */
+  function initTheme(){
+    var toggle = document.getElementById('themeToggle');
+    if(!toggle) return;
+    toggle.addEventListener('click', function(){
+      var root = document.documentElement;
+      var isDark = root.getAttribute('data-theme') === 'dark';
+      var next = isDark ? 'light' : 'dark';
+      root.setAttribute('data-theme', next);
+      try{ localStorage.setItem('gerrard-theme', next); }catch(e){}
     });
-  });
+  }
 
-  /* ---------- Mobile nav ---------- */
-  var navToggle = document.getElementById("navToggle");
-  var mobilePanel = document.getElementById("mobilePanel");
-  if (navToggle && mobilePanel) {
-    navToggle.addEventListener("click", function () {
-      navToggle.classList.toggle("is-open");
-      mobilePanel.classList.toggle("is-open");
+  /* ---- Mobile nav ---- */
+  function initMobileNav(){
+    var navToggle = document.getElementById('navToggle');
+    var mobilePanel = document.getElementById('mobilePanel');
+    if(!navToggle || !mobilePanel) return;
+    navToggle.addEventListener('click', function(){
+      navToggle.classList.toggle('open');
+      mobilePanel.classList.toggle('open');
     });
-    mobilePanel.querySelectorAll("a").forEach(function (a) {
-      a.addEventListener("click", function () {
-        navToggle.classList.remove("is-open");
-        mobilePanel.classList.remove("is-open");
+    mobilePanel.querySelectorAll('a').forEach(function(a){
+      a.addEventListener('click', function(){
+        navToggle.classList.remove('open');
+        mobilePanel.classList.remove('open');
       });
     });
   }
 
-  /* ---------- Mark current nav link ---------- */
-  var path = location.pathname.split("/").pop() || "index.html";
-  document.querySelectorAll(".nav-links a, .mobile-panel a").forEach(function (a) {
-    var href = a.getAttribute("href");
-    if (href === path) a.classList.add("current");
-  });
+  /* ---- Sliding nav indicator ---- */
+  function initNavIndicator(){
+    var navLinks = document.getElementById('navLinks');
+    var indicator = document.getElementById('navIndicator');
+    if(!navLinks || !indicator) return;
+    var links = navLinks.querySelectorAll('a');
 
-  /* ---------- Scroll reveal ---------- */
-  var revealEls = document.querySelectorAll(".reveal");
-  if ("IntersectionObserver" in window && revealEls.length) {
-    var io = new IntersectionObserver(
-      function (entries) {
-        entries.forEach(function (entry) {
-          if (entry.isIntersecting) {
-            entry.target.classList.add("is-visible");
-            io.unobserve(entry.target);
-          }
-        });
-      },
-      { threshold: 0.12, rootMargin: "0px 0px -40px 0px" }
-    );
-    revealEls.forEach(function (el) { io.observe(el); });
-  } else {
-    revealEls.forEach(function (el) { el.classList.add("is-visible"); });
-  }
-
-  /* ---------- Back to top ---------- */
-  var toTop = document.querySelector(".to-top");
-  if (toTop) {
-    window.addEventListener("scroll", function () {
-      toTop.classList.toggle("is-visible", window.scrollY > 480);
+    function moveTo(el){
+      var navRect = navLinks.getBoundingClientRect();
+      var rect = el.getBoundingClientRect();
+      indicator.style.width = rect.width + 'px';
+      indicator.style.transform = 'translateX(' + (rect.left - navRect.left) + 'px)';
+    }
+    links.forEach(function(link){
+      link.addEventListener('mouseenter', function(){ moveTo(link); });
     });
-    toTop.addEventListener("click", function () {
-      window.scrollTo({ top: 0, behavior: "smooth" });
+    navLinks.addEventListener('mouseleave', function(){
+      var active = navLinks.querySelector('a.active');
+      if(active) moveTo(active);
+    });
+    var active = navLinks.querySelector('a.active');
+    if(active){ moveTo(active); indicator.style.opacity = '1'; }
+    window.addEventListener('resize', function(){
+      var a = navLinks.querySelector('a.active');
+      if(a) moveTo(a);
     });
   }
 
-  /* ---------- Typing effect (hero role) ---------- */
-  var typingEl = document.querySelector("[data-typing]");
-  if (typingEl) {
-    var words = [];
-    try { words = JSON.parse(typingEl.getAttribute("data-typing")); } catch (e) {}
-    if (words.length) {
-      var wi = 0, ci = 0, deleting = false;
-      var TYPE_SPEED = 55, DELETE_SPEED = 32, HOLD = 1600, GAP = 400;
+  /* ---- Footer year ---- */
+  function initFooterYear(){
+    document.querySelectorAll('[data-year]').forEach(function(el){
+      el.textContent = new Date().getFullYear();
+    });
+  }
 
-      var tick = function () {
-        var word = words[wi];
-        if (!deleting) {
-          ci++;
-          typingEl.textContent = word.slice(0, ci);
-          if (ci === word.length) {
-            deleting = true;
-            return setTimeout(tick, HOLD);
-          }
-          return setTimeout(tick, TYPE_SPEED);
-        } else {
-          ci--;
-          typingEl.textContent = word.slice(0, ci);
-          if (ci === 0) {
-            deleting = false;
-            wi = (wi + 1) % words.length;
-            return setTimeout(tick, GAP);
-          }
-          return setTimeout(tick, DELETE_SPEED);
+  /* ---- Scroll reveal (single shared observer, not one per element) ---- */
+  function initReveal(){
+    var items = document.querySelectorAll('.reveal');
+    if(!items.length) return;
+    if(!('IntersectionObserver' in window)){
+      items.forEach(function(el){ el.classList.add('in'); });
+      return;
+    }
+    var io = new IntersectionObserver(function(entries){
+      entries.forEach(function(entry){
+        if(entry.isIntersecting){
+          entry.target.classList.add('in');
+          io.unobserve(entry.target);
         }
-      };
-      typingEl.textContent = "";
-      setTimeout(tick, 500);
-    }
+      });
+    }, { threshold: 0.12, rootMargin: '0px 0px -40px 0px' });
+    items.forEach(function(el){ io.observe(el); });
   }
 
-  /* ---------- Skill bar fill animation ---------- */
-  var skillFills = document.querySelectorAll(".skill-fill[data-fill]");
-  if (skillFills.length) {
-    if ("IntersectionObserver" in window) {
-      var skillIo = new IntersectionObserver(
-        function (entries) {
-          entries.forEach(function (entry) {
-            if (entry.isIntersecting) {
-              entry.target.style.width = entry.target.getAttribute("data-fill");
-              skillIo.unobserve(entry.target);
-            }
-          });
-        },
-        { threshold: 0.4 }
-      );
-      skillFills.forEach(function (el) { skillIo.observe(el); });
-    } else {
-      skillFills.forEach(function (el) { el.style.width = el.getAttribute("data-fill"); });
-    }
+  /* ---- Back to top ---- */
+  function initToTop(){
+    var btn = document.querySelector('.to-top');
+    if(!btn) return;
+    var ticking = false;
+    window.addEventListener('scroll', function(){
+      if(ticking) return;
+      ticking = true;
+      requestAnimationFrame(function(){
+        btn.classList.toggle('visible', window.scrollY > 480);
+        ticking = false;
+      });
+    }, { passive: true });
+    btn.addEventListener('click', function(){
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
   }
 
-  /* ---------- Contact form (front-end only) ---------- */
-  var contactForm = document.getElementById("contact-form");
-  if (contactForm) {
-    contactForm.addEventListener("submit", function (e) {
+  /* ---- Skill bars fill on view ---- */
+  function initSkillBars(){
+    var fills = document.querySelectorAll('.skill-fill[data-fill]');
+    if(!fills.length) return;
+    if(!('IntersectionObserver' in window)){
+      fills.forEach(function(f){ f.style.width = f.dataset.fill; });
+      return;
+    }
+    var io = new IntersectionObserver(function(entries){
+      entries.forEach(function(entry){
+        if(entry.isIntersecting){
+          entry.target.style.width = entry.target.dataset.fill;
+          io.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.4 });
+    fills.forEach(function(f){ io.observe(f); });
+  }
+
+  /* ---- Hero typing effect ---- */
+  function initTyping(){
+    var el = document.querySelector('[data-typing]');
+    if(!el) return;
+    var words;
+    try{ words = JSON.parse(el.getAttribute('data-typing')); }catch(e){ return; }
+    if(!words || !words.length) return;
+    var wordIdx = 0, charIdx = 0, deleting = false;
+
+    function tick(){
+      var word = words[wordIdx];
+      if(!deleting){
+        charIdx++;
+        el.textContent = word.slice(0, charIdx);
+        if(charIdx === word.length){
+          deleting = true;
+          setTimeout(tick, 1400);
+          return;
+        }
+      } else {
+        charIdx--;
+        el.textContent = word.slice(0, charIdx);
+        if(charIdx === 0){
+          deleting = false;
+          wordIdx = (wordIdx + 1) % words.length;
+        }
+      }
+      setTimeout(tick, deleting ? 40 : 70);
+    }
+    tick();
+  }
+
+  /* ---- Contact form (client-side validation + status message) ---- */
+  function initContactForm(){
+    var form = document.getElementById('contact-form');
+    if(!form) return;
+    var status = form.querySelector('.form-status');
+    form.addEventListener('submit', function(e){
       e.preventDefault();
-      var status = contactForm.querySelector(".form-status");
-      var btn = contactForm.querySelector("button[type='submit']");
-      var originalLabel = btn.textContent;
-      btn.textContent = "Sending…";
-      btn.disabled = true;
-      setTimeout(function () {
-        btn.textContent = originalLabel;
-        btn.disabled = false;
-        if (status) {
-          status.textContent = "Thank you — your message has been received. I'll reply within 1–2 business days.";
-          status.style.color = "var(--gold)";
-        }
-        contactForm.reset();
-      }, 900);
+      if(!form.checkValidity()){
+        if(status){ status.textContent = 'Please fill in every field before sending.'; status.style.color = '#b3432b'; }
+        return;
+      }
+      if(status){ status.textContent = "Thanks — that's sent. I'll reply within a day or two."; status.style.color = 'var(--accent-dark)'; }
+      form.reset();
     });
   }
 
-  /* ---------- Portfolio: data, filter, grid, lightbox ---------- */
-  var projectGrid = document.getElementById("projectGrid");
-  if (projectGrid) {
-    var projects = [
-      { id: "01", title: "Nova Banking Redesign", cat: "Product", tags: ["Product Design", "Mobile"], img: "work/product.jpg", desc: "A full visual and interaction overhaul for a digital banking app, focused on clarity, trust, and a premium everyday feel.", medium: "Mobile · UI", year: "2026" },
-      { id: "02", title: "Atlas Component Library", cat: "Systems", tags: ["Design Systems", "Web"], img: "work/logo1.1.jpg", desc: "A documented component library and token system built to keep a fast-moving product team consistent at scale.", medium: "Web · Design System", year: "2025" },
-      { id: "03", title: "Solace Wellness Rebrand", cat: "Branding", tags: ["Branding", "Web"], img: "work/bag%20mokup.jpg", desc: "Full identity relaunch for a wellness studio — logo system, packaging, and a refreshed web presence.", medium: "Branding · Web", year: "2025" },
-      { id: "04", title: "Meridian Packaging System", cat: "Packaging", tags: ["Packaging", "Print"], img: "work/bag%20mokup%20model.jpg", desc: "Modular packaging system for a specialty goods line, engineered for shelf presence and production efficiency.", medium: "Packaging · Print", year: "2024" },
-      { id: "05", title: "Lumen Mark & Wordmark", cat: "Branding", tags: ["Logo", "Identity"], img: "work/logo%201.jpg", desc: "A precise, versatile mark built to scale from favicon to storefront signage without losing character.", medium: "Identity", year: "2024" },
-      { id: "06", title: "Northbound Festival Poster", cat: "Print", tags: ["Print", "Editorial"], img: "work/poster%201.jpg", desc: "Limited-run poster series for an annual arts festival, screen-printed in two spot colors.", medium: "Print · Poster", year: "2023" }
-    ];
+  /* ---- Newsletter / subscribe form ---- */
+  function initSubscribeForm(){
+    var form = document.querySelector('.subscribe-form');
+    if(!form) return;
+    form.addEventListener('submit', function(e){
+      e.preventDefault();
+      var input = form.querySelector('input[type="email"]');
+      var btn = form.querySelector('button');
+      if(input && input.checkValidity() && btn){
+        btn.textContent = 'Subscribed ✓';
+        form.reset();
+      }
+    });
+  }
 
-    var categories = ["All"].concat(
-      projects.reduce(function (acc, p) { return acc.indexOf(p.cat) === -1 ? acc.concat(p.cat) : acc; }, [])
-    );
+  /* ---- Portfolio filter + lightbox ---- */
+  var PROJECTS = [
+    { id:1, no:'01', title:'Nova Banking Redesign', desc:'A calmer, more legible visual system for a finance app used daily by tens of thousands of people.', category:'Branding', tags:['Branding','Digital'], medium:'Identity + UI', year:'2026', img:'work/product.jpg' },
+    { id:2, no:'02', title:'Atlas Component Library', desc:'A documented design system built to keep a fast-moving product team visually consistent.', category:'Digital', tags:['Design Systems','Web'], medium:'Design System', year:'2025', img:'work/logo1.1.jpg' },
+    { id:3, no:'03', title:'Solace Wellness Rebrand', desc:'Full identity refresh for a wellness brand, from packaging through to the website.', category:'Branding', tags:['Branding','Web'], medium:'Identity + Web', year:'2025', img:'work/bag%20mokup.jpg' },
+    { id:4, no:'04', title:'Field Notes Poster Series', desc:'A limited-run poster series exploring type-driven editorial layout.', category:'Print', tags:['Print','Editorial'], medium:'Offset print', year:'2025', img:'work/poster%201.jpg' },
+    { id:5, no:'05', title:'Marque Logo System', desc:'A flexible mark built to scale from favicon to storefront signage.', category:'Branding', tags:['Branding'], medium:'Identity', year:'2024', img:'work/logo%201.jpg' },
+    { id:6, no:'06', title:'Harbor Packaging Line', desc:'Shelf-ready packaging system for a consumer goods relaunch.', category:'Print', tags:['Print','Packaging'], medium:'Packaging', year:'2024', img:'work/a.jpg' }
+  ];
 
-    var filterBar = document.getElementById("filterBar");
-    var activeCat = "All";
+  function initPortfolio(){
+    var grid = document.getElementById('projectGrid');
+    var filterBar = document.getElementById('filterBar');
+    if(!grid || !filterBar) return;
 
-    function renderFilters() {
-      filterBar.innerHTML = "";
-      categories.forEach(function (cat) {
-        var b = document.createElement("button");
-        b.textContent = cat;
-        if (cat === activeCat) b.classList.add("is-active");
-        b.addEventListener("click", function () {
-          activeCat = cat;
-          renderFilters();
-          renderGrid();
-        });
-        filterBar.appendChild(b);
-      });
-    }
+    var categories = ['All'].concat(Array.from(new Set(PROJECTS.map(function(p){ return p.category; }))));
+    filterBar.innerHTML = categories.map(function(c, i){
+      return '<button class="filter-btn' + (i === 0 ? ' active' : '') + '" data-filter="' + c + '">' + c + '</button>';
+    }).join('');
 
-    function renderGrid() {
-      projectGrid.innerHTML = "";
-      var list = activeCat === "All" ? projects : projects.filter(function (p) { return p.cat === activeCat; });
-      list.forEach(function (p, idx) {
-        var a = document.createElement("a");
-        a.href = "#";
-        a.className = "project-card reveal is-visible";
-        a.setAttribute("data-id", p.id);
-        a.innerHTML =
-          '<div class="project-thumb">' +
-            '<img src="' + p.img + '" alt="' + p.title + '" loading="lazy" onerror="this.closest(\'.project-thumb\').classList.add(\'img-fallback\')">' +
-            '<span class="project-thumb-tag">' + p.cat + '</span>' +
-          '</div>' +
-          '<div class="project-body">' +
-            '<h3>' + p.title + '</h3>' +
-            '<div class="project-tags">' + p.tags.map(function (t) { return '<span class="tag">' + t + '</span>'; }).join("") + '</div>' +
-          '</div>';
-        a.addEventListener("click", function (e) {
+    function renderGrid(list){
+      grid.innerHTML = list.map(function(p){
+        return '<a href="#" class="card project-card reveal in" data-id="' + p.id + '">' +
+          '<div class="project-thumb"><img src="' + p.img + '" alt="' + p.title + '" loading="lazy" decoding="async" width="600" height="450"><span class="project-thumb-tag">' + p.category + '</span></div>' +
+          '<div class="project-body"><span class="pf-no mono">JOB—' + p.no + '</span><h3 style="margin-top:8px;">' + p.title + '</h3>' +
+          '<div class="project-tags">' + p.tags.map(function(t){ return '<span class="tag">' + t + '</span>'; }).join('') + '</div></div></a>';
+      }).join('');
+      grid.querySelectorAll('.project-card').forEach(function(card){
+        card.addEventListener('click', function(e){
           e.preventDefault();
-          openLightbox(list, idx);
+          openLightbox(Number(card.dataset.id));
         });
-        projectGrid.appendChild(a);
       });
     }
+    renderGrid(PROJECTS);
 
-    renderFilters();
-    renderGrid();
+    filterBar.addEventListener('click', function(e){
+      var btn = e.target.closest('.filter-btn');
+      if(!btn) return;
+      filterBar.querySelectorAll('.filter-btn').forEach(function(b){ b.classList.remove('active'); });
+      btn.classList.add('active');
+      var f = btn.dataset.filter;
+      renderGrid(f === 'All' ? PROJECTS : PROJECTS.filter(function(p){ return p.category === f; }));
+    });
 
     /* Lightbox */
-    var lightbox = document.getElementById("lightbox");
-    var lbImage = document.getElementById("lbImage");
-    var lbTitle = document.getElementById("lbTitle");
-    var lbDesc = document.getElementById("lbDesc");
-    var lbJobNo = document.getElementById("lbJobNo");
-    var lbMedium = document.getElementById("lbMedium");
-    var lbYear = document.getElementById("lbYear");
-    var lbPrev = document.getElementById("lbPrev");
-    var lbNext = document.getElementById("lbNext");
-    var lbClose = document.getElementById("lightboxClose");
-    var currentList = [], currentIdx = 0;
-
-    function openLightbox(list, idx) {
-      currentList = list;
-      currentIdx = idx;
-      paint();
-      lightbox.classList.add("is-open");
-      document.body.style.overflow = "hidden";
+    var lightbox = document.getElementById('lightbox');
+    if(!lightbox) return;
+    var current = 0;
+    var els = {
+      img: document.getElementById('lbImage'),
+      jobNo: document.getElementById('lbJobNo'),
+      title: document.getElementById('lbTitle'),
+      desc: document.getElementById('lbDesc'),
+      medium: document.getElementById('lbMedium'),
+      year: document.getElementById('lbYear')
+    };
+    function openLightbox(id){
+      current = PROJECTS.findIndex(function(p){ return p.id === id; });
+      renderLightbox();
+      lightbox.classList.add('open');
+      document.body.style.overflow = 'hidden';
     }
-    function paint() {
-      var p = currentList[currentIdx];
-      lbImage.src = p.img;
-      lbImage.alt = p.title;
-      lbTitle.textContent = p.title;
-      lbDesc.textContent = p.desc;
-      lbJobNo.textContent = "JOB — " + p.id;
-      lbMedium.textContent = p.medium;
-      lbYear.textContent = p.year;
+    function renderLightbox(){
+      var p = PROJECTS[current];
+      els.img.src = p.img; els.img.alt = p.title;
+      els.jobNo.textContent = 'JOB—' + p.no;
+      els.title.textContent = p.title;
+      els.desc.textContent = p.desc;
+      els.medium.textContent = p.medium;
+      els.year.textContent = p.year;
     }
-    function closeLightbox() {
-      lightbox.classList.remove("is-open");
-      document.body.style.overflow = "";
+    function closeLightbox(){
+      lightbox.classList.remove('open');
+      document.body.style.overflow = '';
     }
-    if (lbClose) lbClose.addEventListener("click", closeLightbox);
-    if (lightbox) lightbox.addEventListener("click", function (e) { if (e.target === lightbox) closeLightbox(); });
-    if (lbPrev) lbPrev.addEventListener("click", function () { currentIdx = (currentIdx - 1 + currentList.length) % currentList.length; paint(); });
-    if (lbNext) lbNext.addEventListener("click", function () { currentIdx = (currentIdx + 1) % currentList.length; paint(); });
-    document.addEventListener("keydown", function (e) {
-      if (!lightbox.classList.contains("is-open")) return;
-      if (e.key === "Escape") closeLightbox();
-      if (e.key === "ArrowLeft" && lbPrev) lbPrev.click();
-      if (e.key === "ArrowRight" && lbNext) lbNext.click();
+    document.getElementById('lightboxClose').addEventListener('click', closeLightbox);
+    lightbox.addEventListener('click', function(e){ if(e.target === lightbox) closeLightbox(); });
+    document.getElementById('lbPrev').addEventListener('click', function(){
+      current = (current - 1 + PROJECTS.length) % PROJECTS.length; renderLightbox();
     });
+    document.getElementById('lbNext').addEventListener('click', function(){
+      current = (current + 1) % PROJECTS.length; renderLightbox();
+    });
+    document.addEventListener('keydown', function(e){
+      if(!lightbox.classList.contains('open')) return;
+      if(e.key === 'Escape') closeLightbox();
+      if(e.key === 'ArrowLeft') document.getElementById('lbPrev').click();
+      if(e.key === 'ArrowRight') document.getElementById('lbNext').click();
+    });
+  }
+
+  function init(){
+    initTheme();
+    initMobileNav();
+    initNavIndicator();
+    initFooterYear();
+    initReveal();
+    initToTop();
+    initSkillBars();
+    initTyping();
+    initContactForm();
+    initSubscribeForm();
+    initPortfolio();
+  }
+
+  if(document.readyState === 'loading'){
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
   }
 })();
