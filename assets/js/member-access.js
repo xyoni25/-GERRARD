@@ -218,7 +218,7 @@
     membershipStatus.textContent = "Checking your access…";
     var result = await client
       .from("memberships")
-      .select("user_id")
+      .select("user_id,expires_at")
       .eq("user_id", user.id)
       .maybeSingle();
 
@@ -231,8 +231,26 @@
       return;
     }
 
-    membershipStatus.textContent = "Your one-time code was redeemed. Portfolio access is permanent—no renewal or second payment is required.";
-    enterSite.hidden = false;
+    var expiresAt = result.data.expires_at;
+    if(expiresAt === null){
+      membershipStatus.textContent = "Your legacy portfolio access remains active with no expiration date. If you make another payment, redeeming its code will start a new term-based access period.";
+      enterSite.hidden = false;
+      redeemBlock.hidden = false;
+      codeForm.hidden = false;
+    }else{
+      var expiryTime = Date.parse(expiresAt);
+      if(!Number.isFinite(expiryTime)) throw new Error("Your access expiration could not be checked. Please try again.");
+      if(expiryTime <= Date.now()){
+        membershipStatus.textContent = "Your portfolio access expired on " + formatDate(expiresAt) + ". After another verified one-time payment, redeem your new code here to renew.";
+        redeemBlock.hidden = false;
+        codeForm.hidden = false;
+      }else{
+        membershipStatus.textContent = "Your portfolio access is active until " + formatDate(expiresAt) + ". Renew manually with another payment and code; there are no recurring charges.";
+        enterSite.hidden = false;
+        redeemBlock.hidden = false;
+        codeForm.hidden = false;
+      }
+    }
     await loadReceipts();
   }
 

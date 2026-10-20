@@ -71,7 +71,7 @@ export async function onRequest(context){
 
   try{
     var membershipUrl = new URL(supabaseUrl + "/rest/v1/memberships");
-    membershipUrl.searchParams.set("select", "user_id");
+    membershipUrl.searchParams.set("select", "user_id,expires_at");
     membershipUrl.searchParams.set("limit", "1");
     var membershipResponse = await fetch(membershipUrl.toString(), {
       headers: headers
@@ -84,6 +84,13 @@ export async function onRequest(context){
     var memberships = await membershipResponse.json();
     if(!Array.isArray(memberships)) return unavailable();
     if(memberships.length === 0) return redirectToAccess(request);
+    var expiresAt = memberships[0].expires_at;
+    if(expiresAt !== null){
+      var expiryTime = Date.parse(expiresAt);
+      if(!Number.isFinite(expiryTime) || expiryTime <= Date.now()){
+        return redirectToAccess(request);
+      }
+    }
 
     return noStore(await context.next());
   }catch(error){

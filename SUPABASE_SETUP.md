@@ -1,11 +1,11 @@
 # One-time portfolio access setup
 
-Customers create an account, pay once using the Telebirr or CBE details on `members.html`, and upload their receipt while signed in. Receipts are stored in a private Supabase bucket and linked to their account. Review each payment yourself; after verification, issue a one-time access code. Redeeming that code grants permanent access. Payment uploads never approve a customer or grant access automatically.
+Customers choose a plan on `members.html`, make one manual Telebirr or CBE transfer, and send the selected plan and payment details to the owner in Telegram. The screenshot is previewed locally in the browser; the page does not upload it to a server. Verify each payment yourself, then issue a one-time code for the selected plan. Redeeming the code grants access for that term. This is not recurring billing, and opening Telegram or sending a receipt never approves a payment or grants access.
 
 ## 1. Deploy with Cloudflare Pages and Supabase
 
-1. Create a Supabase project and enable email/password sign-in.
-2. Run [`supabase/schema.sql`](./supabase/schema.sql) in the Supabase SQL Editor. It creates the membership/code schema, a private `payment-receipts` bucket (5 MB maximum; JPEG, PNG and WebP only), the receipt-submission table, and owner-scoped RLS policies.
+1. Create a Supabase project and enable email/password sign-in for accounts that receive portfolio access.
+2. Run [`supabase/schema.sql`](./supabase/schema.sql) in the Supabase SQL Editor. It creates or updates the memberships and access-code schema, the private `payment-receipts` bucket (5 MB maximum; JPEG, PNG and WebP only), the receipt-submission table, and owner-scoped RLS policies. The receipt bucket/table remain private and do not grant access.
 3. Create a Cloudflare Pages project from this repository. Use the repository root (`.`) as the static output directory and no build command. Cloudflare Pages detects the `functions/_middleware.js` access gate.
 4. In Cloudflare Pages project settings, add these environment variables for production (and preview if needed):
    - `SUPABASE_URL`: your Supabase project URL.
@@ -13,38 +13,51 @@ Customers create an account, pay once using the Telebirr or CBE details on `memb
 5. Copy the same URL and public key into `assets/js/supabase-config.js`.
 6. Set the Supabase site URL to your deployed site and add `https://your-domain.example/members.html` to the allowed redirect URLs. Test the deployed site over HTTPS.
 
-Do not add a Supabase `service_role` key to the website, `supabase-config.js`, or Cloudflare middleware. Customers can insert and view only their own pending receipt rows and access only objects in their own user-ID folder. They cannot set a receipt to approved, edit its status, or create a membership. The owner can review submissions in Supabase Studio; the Storage bucket must remain private.
+Do not add a Supabase `service_role` key to the website, `supabase-config.js`, or Cloudflare middleware. The middleware and client use only a public key plus the signed-in user's access token. Keep the `payment-receipts` bucket private. If a separate receipt-upload workflow is connected later, customers must only be able to submit their own pending receipt rows and access objects in their own user-ID folder; receipt status changes remain owner-only.
 
-The public unlock page and its minimal sign-in assets remain reachable so customers can create accounts, sign in, read payment instructions, and submit receipts. Every other HTML page checks the signed-in account and redirects unapproved visitors to `members.html` before showing page content. The Cloudflare middleware is the authoritative protection for direct requests to pages and files, including portfolio images and downloads. Do not create a second public copy of protected content.
+Every protected page and file checks for a signed-in account with an active membership: `expires_at` must be in the future, except that a `NULL expires_at` is deliberately treated as a grandfathered legacy membership so existing users are not locked out by this migration. New codes always grant a finite term. Customers must sign in through the site's configured authenticated flow; static file access does not enforce authentication.
 
-Before Supabase is configured, all site pages intentionally redirect to `members.html`. Opening pages as `file://` can demonstrate that redirect, but sign-in, receipt submission, and approval checks require the configured Supabase project. Actual protection for direct file requests requires deployment through Cloudflare Pages; static files opened locally do not have server-side access control.
+Before Supabase is configured, protected pages return visitors to `members.html`. Opening pages as `file://` can demonstrate that redirect, but sign-in and access checks require the configured Supabase project. Actual protection for direct file requests requires deployment through Cloudflare Pages; static files opened locally do not have server-side access control.
 
-## 2. Review receipt submissions
+## 2. Preserve existing memberships during migration
 
-1. In Supabase Studio, open **Table Editor → `receipt_submissions`** to see each submission's ID, user ID, private object path, MIME type, size, status, and timestamp. The customer-facing page shows only that customer's own rows.
-2. Open **Storage → `payment-receipts`** to inspect or download the private image. Objects are stored under the uploader's UUID. Do not make this bucket public or copy receipts to a public site folder.
-3. Independently confirm the transfer, then update the row's status in the Studio table editor (or as the project owner in SQL). `approved` means the receipt was manually verified; it does **not** grant portfolio access. For example:
+The schema is safe to re-run: it adds `expires_at` if missing and does not drop or overwrite an existing expiry. Existing membership rows whose `expires_at` is `NULL` remain active as legacy access. The migration intentionally does **not** invent an expiration date or silently revoke those accounts.
 
-   ```sql
-   update public.receipt_submissions
-   set status = 'approved'
-   where id = 'RECEIPT-SUBMISSION-UUID';
-   ```
-
-   If you need to request clarification, use `rejected`; the customer will see “Follow-up needed.” Keep the receipt record for your review history.
-4. Only after confirming payment, issue and send the customer a personal access code through a private channel.
-
-## 3. Issue and redeem a one-time code
-
-After verifying payment, run this in the Supabase SQL Editor:
+Review any legacy rows before deciding whether to set expiration dates:
 
 ```sql
-select public.create_access_code();
+select user_id, approved_at, expires_at
+from public.memberships
+where expires_at is null
+order by approved_at;
 ```
 
-Copy the returned code and send it privately to that customer. It is a random 32-character code, stored only as a SHA-256 hash, valid for 7 days, and can be redeemed once by one signed-in account. The customer signs into the website and enters the code on the unlock page. Successful redemption grants permanent access; the same customer never needs another payment or code.
+Keep those rows grandfathered, or explicitly communicate a transition date and backfill only the accounts covered by that policy. For example, after notifying the affected owners/customers, set an agreed end date for selected accounts:
 
-Redemption is atomic, so the code cannot unlock more than one account even if multiple people try it at the same time. An unused code expires after 7 days; generate a new code if it expires before the customer uses it.
+```sql
+update public.memberships
+set expires_at = '2027-01-31 23:59:59+00'
+where user_id = '00000000-0000-0000-0000-000000000000'
+  and expires_at is null;
+```
+
+Do not run a blanket backfill without an owner-approved transition policy. A legacy user who voluntarily redeems a newly paid code is changed to term-based access from the redemption time; this does not happen merely by running the migration. Existing unredeemed codes are assigned the safe one-month duration by the additive migration; new code issuance should always specify the plan.
+
+## 3. Verify payments and issue a plan-duration code
+
+1. Independently confirm the transfer with the payment provider. In the Telegram message, check the selected plan, duration, and total; the customer must attach the receipt image in the chat.
+2. After confirming the correct amount, issue the matching code in Supabase SQL Editor. Choose one of the supported terms: `1`, `3`, `5`, or `12` months.
+
+   ```sql
+   -- Example: verified 3-month payment (1,400 ETB)
+   select public.create_access_code(3);
+   ```
+
+3. Send the returned code privately to that customer. It is a random 32-character code, stored only as a SHA-256 hash, valid for 7 days, and redeemable once by one signed-in account. Its stored duration grants the selected number of months.
+
+An existing no-argument call, `select public.create_access_code();`, remains available for compatibility and issues a 1-month code. Prefer the explicit duration argument for every payment so the code matches the plan selected by the customer.
+
+Redemption is atomic: the code is locked while it is redeemed, so it cannot grant access to multiple accounts. For an active membership, a new code extends from its current expiration; for an expired or legacy (no-expiration) membership, the new term starts at redemption time. An unused code expires after 7 days; generate a new code if it expires before use. A new payment and code are always manual—there is no recurring charge.
 
 To revoke a customer's access, open Authentication → Users, copy their user ID, and run:
 
@@ -52,3 +65,7 @@ To revoke a customer's access, open Authentication → Users, copy their user ID
 delete from public.memberships
 where user_id = '00000000-0000-0000-0000-000000000000';
 ```
+
+## 4. Private receipt storage (if used by a separate workflow)
+
+The schema retains the private `payment-receipts` bucket and `receipt_submissions` table with owner-scoped policies. The current `members.html` flow does **not** upload images to Supabase or create receipt rows; the customer attaches the screenshot directly in Telegram. Never tell a customer that a page upload succeeded or treat a receipt submission as an approval. If the site later adds a dedicated upload workflow, inspect the private object and independently confirm payment before issuing a code.

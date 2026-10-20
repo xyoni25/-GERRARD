@@ -7,7 +7,10 @@ alter table public.memberships
   add column if not exists approved_at timestamptz not null default now();
 
 alter table public.memberships
-  drop column if exists expires_at;
+  add column if not exists expires_at timestamptz;
+
+alter table public.memberships
+  alter column expires_at drop not null;
 
 alter table public.memberships enable row level security;
 revoke all on public.memberships from anon, authenticated;
@@ -25,15 +28,34 @@ create extension if not exists pgcrypto with schema extensions;
 create table if not exists public.access_codes (
   code_hash bytea primary key,
   expires_at timestamptz not null,
+  duration_months integer not null default 1,
   redeemed_at timestamptz,
   redeemed_by uuid references auth.users (id) on delete set null,
   created_at timestamptz not null default now()
 );
 
+alter table public.access_codes
+  add column if not exists duration_months integer not null default 1;
+
+do $$
+begin
+  if not exists (
+    select 1
+      from pg_constraint
+      where conname = 'access_codes_duration_months_check'
+        and conrelid = 'public.access_codes'::regclass
+  ) then
+    alter table public.access_codes
+      add constraint access_codes_duration_months_check
+      check (duration_months in (1, 3, 5, 12));
+  end if;
+end;
+$$;
+
 alter table public.access_codes enable row level security;
 revoke all on public.access_codes from public, anon, authenticated;
 
-create or replace function public.create_access_code()
+create or replace function public.create_access_code(p_duration_months integer)
 returns text
 language plpgsql
 security definer
@@ -42,11 +64,15 @@ as $$
 declare
   v_code text;
 begin
+  if p_duration_months is null or p_duration_months not in (1, 3, 5, 12) then
+    raise exception 'Duration must be 1, 3, 5, or 12 months.';
+  end if;
+
   loop
     v_code := upper(encode(extensions.gen_random_bytes(16), 'hex'));
     begin
-      insert into public.access_codes (code_hash, expires_at)
-      values (extensions.digest(v_code, 'sha256'), now() + interval '7 days');
+      insert into public.access_codes (code_hash, expires_at, duration_months)
+      values (extensions.digest(v_code, 'sha256'), now() + interval '7 days', p_duration_months);
       return v_code;
     exception when unique_violation then
       continue;
@@ -55,6 +81,17 @@ begin
 end;
 $$;
 
+create or replace function public.create_access_code()
+returns text
+language sql
+security definer
+set search_path = ''
+as $$
+  select public.create_access_code(1);
+$$;
+
+revoke all on function public.create_access_code(integer) from public, anon, authenticated;
+grant execute on function public.create_access_code(integer) to service_role;
 revoke all on function public.create_access_code() from public, anon, authenticated;
 grant execute on function public.create_access_code() to service_role;
 
@@ -68,6 +105,7 @@ declare
   v_user_id uuid := auth.uid();
   v_code_hash bytea;
   v_expires_at timestamptz;
+  v_duration_months integer;
   v_redeemed_at timestamptz;
 begin
   if v_user_id is null or p_code is null or length(trim(p_code)) = 0 then
@@ -76,8 +114,8 @@ begin
 
   v_code_hash := extensions.digest(upper(trim(p_code)), 'sha256');
 
-  select code.expires_at, code.redeemed_at
-    into v_expires_at, v_redeemed_at
+  select code.expires_at, code.duration_months, code.redeemed_at
+    into v_expires_at, v_duration_months, v_redeemed_at
     from public.access_codes as code
     where code.code_hash = v_code_hash
     for update;
@@ -86,9 +124,15 @@ begin
     return false;
   end if;
 
-  insert into public.memberships (user_id)
-  values (v_user_id)
-  on conflict (user_id) do nothing;
+  insert into public.memberships as existing_membership (user_id, approved_at, expires_at)
+  values (
+    v_user_id,
+    now(),
+    now() + make_interval(months => v_duration_months)
+  )
+  on conflict (user_id) do update
+    set expires_at = greatest(coalesce(existing_membership.expires_at, now()), now())
+          + make_interval(months => v_duration_months);
 
   update public.access_codes
     set redeemed_at = now(),

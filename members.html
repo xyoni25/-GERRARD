@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Unlock Portfolio — GERRARD</title>
-<meta name="description" content="Make a one-time payment, upload your screenshot and get portfolio access after manual verification.">
+<meta name="description" content="Choose a one-time portfolio access plan, pay by Telebirr or CBE, and send your receipt to Telegram for manual review.">
 <script>try{if(localStorage.getItem("gerrard-theme")==="dark")document.documentElement.setAttribute("data-theme","dark");}catch(e){}</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -80,6 +80,33 @@ h1.display em{font-style:normal;background:linear-gradient(90deg,var(--red),var(
 .card h2{font-family:var(--serif);font-size:28px;margin-bottom:6px}
 .card>p.sub{color:var(--muted);margin-bottom:24px}
 
+/* Plan selection */
+.plan-section{padding:12px 0 8px}
+.plan-heading{display:flex;align-items:flex-end;justify-content:space-between;gap:24px;margin-bottom:20px}
+.plan-heading .kicker{margin-bottom:8px}
+.plan-heading h2{font-family:var(--serif);font-size:clamp(26px,3vw,34px);line-height:1.15;margin-bottom:8px}
+.plan-heading .sub{max-width:620px;color:var(--muted);font-size:14px}
+.plan-summary{flex:none;padding:10px 14px;border-left:3px solid var(--green);background:var(--green-soft);color:var(--green-dark);font-size:13px;font-weight:700}
+:root[data-theme="dark"] .plan-summary{color:var(--green)}
+.plan-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;border:0;min-width:0}
+.plan-grid legend{position:absolute}
+.plan-option{position:relative;display:flex;min-height:152px;cursor:pointer}
+.plan-option input{position:absolute;opacity:0;inset:12px auto auto 12px;width:20px;height:20px;z-index:1}
+.plan-option-card{display:flex;flex-direction:column;width:100%;padding:18px;border:1px solid var(--line);border-radius:16px;background:var(--surface);transition:border-color .18s,background .18s,transform .18s}
+.plan-option:hover .plan-option-card{border-color:var(--green);transform:translateY(-2px)}
+.plan-option input:focus-visible+.plan-option-card{outline:3px solid color-mix(in srgb,var(--green) 45%,transparent);outline-offset:3px}
+.plan-option input:checked+.plan-option-card{border:2px solid var(--green-dark);padding:17px;background:var(--green-soft);box-shadow:0 8px 20px -16px var(--green-dark)}
+:root[data-theme="dark"] .plan-option input:checked+.plan-option-card{border-color:var(--green)}
+.plan-option.featured .plan-option-card{border-color:color-mix(in srgb,var(--green) 55%,var(--line))}
+.plan-option-head{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+.plan-name{font-weight:700;font-size:15px}
+.plan-tag{font-family:var(--mono);font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:var(--green-dark)}
+:root[data-theme="dark"] .plan-tag{color:var(--green)}
+.plan-price{font-family:var(--serif);font-size:25px;line-height:1.1;font-weight:700;letter-spacing:-.02em}
+.plan-rate{margin-top:5px;color:var(--muted);font-size:12px}
+.plan-total{margin-top:auto;padding-top:14px;font-size:12px;font-weight:700}
+.plan-option[aria-disabled="true"]{cursor:default}
+
 /* Form */
 .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
 .field{display:flex;flex-direction:column;gap:6px;margin-bottom:14px}
@@ -118,10 +145,11 @@ h1.display em{font-style:normal;background:linear-gradient(90deg,var(--red),var(
 
 /* Transfer panel */
 .transfer{position:sticky;top:96px;border-radius:var(--radius);padding:32px;color:#fff;background:linear-gradient(160deg,#0b7a3b 0%,#12a150 45%,#e5383b 140%);box-shadow:var(--shadow);overflow:hidden}
-.transfer::after{content:"G.";position:absolute;right:-10px;bottom:-60px;font-family:var(--serif);font-size:240px;font-weight:700;opacity:.08;line-height:1}
+.transfer::after{content:"G.";position:absolute;right:0;bottom:-60px;font-family:var(--serif);font-size:240px;font-weight:700;opacity:.08;line-height:1}
 .transfer .top{display:flex;justify-content:space-between;font-family:var(--mono);font-size:11px;letter-spacing:.14em;opacity:.85;margin-bottom:14px}
 .transfer h2{font-family:var(--serif);font-size:28px;margin-bottom:6px}
 .transfer .intro{opacity:.9;font-size:14px;margin-bottom:22px}
+.transfer .recipient{font-size:16px;font-weight:600;margin-bottom:14px}
 .opt{background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.25);backdrop-filter:blur(6px);border-radius:16px;padding:16px 18px;margin-bottom:12px;position:relative}
 .opt .label{display:block;font-family:var(--mono);font-size:10px;letter-spacing:.14em;opacity:.8}
 .opt strong{display:block;font-size:17px;margin:2px 0 6px}
@@ -144,6 +172,7 @@ h1.display em{font-style:normal;background:linear-gradient(90deg,var(--red),var(
 @media(max-width:900px){
   .layout{grid-template-columns:1fr}
   .transfer{position:static;order:-1}
+  .plan-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
   .steps{grid-template-columns:1fr 1fr}
   .nav-links{display:none}
   .nav-toggle{display:grid}
@@ -153,6 +182,10 @@ h1.display em{font-style:normal;background:linear-gradient(90deg,var(--red),var(
   .grid-2{grid-template-columns:1fr}
   .card{padding:24px}
   .hero{padding-top:44px}
+  .plan-heading{align-items:flex-start;flex-direction:column;gap:14px}
+  .plan-grid{grid-template-columns:1fr}
+  .plan-option{min-height:132px}
+  .plan-option-card{padding:16px}
 }
 </style>
 </head>
@@ -183,23 +216,73 @@ h1.display em{font-style:normal;background:linear-gradient(90deg,var(--red),var(
 <main>
   <section class="hero">
     <div class="container">
-      <p class="eyebrow"><span class="dot"></span> One payment · Permanent access</p>
+      <p class="eyebrow"><span class="dot"></span> Manual payment · Time-limited access</p>
       <h1 class="display">A considered way<br>into the <em>portfolio.</em></h1>
-      <p class="lede">Pay once, add your screenshot below and continue to my Telegram chat. I verify it personally and send your access.</p>
+      <p class="lede">Choose an access term, make a one-time payment, then send your receipt in Telegram for personal review. No recurring charges.</p>
       <ol class="steps" aria-label="Access steps">
-        <li><span>01</span><strong>Make payment</strong></li>
-        <li><span>02</span><strong>Upload screenshot</strong></li>
-        <li><span>03</span><strong>I verify it</strong></li>
-        <li><span>04</span><strong>Get access</strong></li>
+        <li><span>01</span><strong>Choose a plan</strong></li>
+        <li><span>02</span><strong>Make payment</strong></li>
+        <li><span>03</span><strong>Send receipt</strong></li>
+        <li><span>04</span><strong>Redeem your code</strong></li>
       </ol>
     </div>
   </section>
 
+  <section class="container plan-section" aria-labelledby="plan-title">
+    <div class="plan-heading">
+      <div>
+        <div class="kicker"><span>STEP 01</span><span>ACCESS PLANS</span></div>
+        <h2 id="plan-title">Choose your access duration</h2>
+        <p class="sub">Access lasts for the term you choose. Renew later with another one-time payment and a new code—there is no recurring billing.</p>
+      </div>
+      <p class="plan-summary" id="selected-plan-summary" aria-live="polite">Selected: 1 Month · Flexible plan · 500 ETB total</p>
+    </div>
+    <fieldset class="plan-grid" aria-describedby="plan-title">
+      <legend class="visually-hidden">Select one access plan</legend>
+      <label class="plan-option">
+        <input type="radio" name="plan" value="1-month" checked>
+        <span class="plan-option-card">
+          <span class="plan-option-head"><span class="plan-name">1 Month</span><span class="plan-tag">Flexible</span></span>
+          <span class="plan-price">500 ETB</span>
+          <span class="plan-rate">500 ETB / month · Flexible plan</span>
+          <span class="plan-total">500 ETB total</span>
+        </span>
+      </label>
+      <label class="plan-option">
+        <input type="radio" name="plan" value="3-months">
+        <span class="plan-option-card">
+          <span class="plan-option-head"><span class="plan-name">3 Months</span></span>
+          <span class="plan-price">467 ETB<span class="plan-rate"> / month</span></span>
+          <span class="plan-rate">Billed once for the full term</span>
+          <span class="plan-total">1,400 ETB total</span>
+        </span>
+      </label>
+      <label class="plan-option">
+        <input type="radio" name="plan" value="5-months">
+        <span class="plan-option-card">
+          <span class="plan-option-head"><span class="plan-name">5 Months</span></span>
+          <span class="plan-price">440 ETB<span class="plan-rate"> / month</span></span>
+          <span class="plan-rate">Billed once for the full term</span>
+          <span class="plan-total">2,200 ETB total</span>
+        </span>
+      </label>
+      <label class="plan-option featured">
+        <input type="radio" name="plan" value="1-year">
+        <span class="plan-option-card">
+          <span class="plan-option-head"><span class="plan-name">1 Year</span><span class="plan-tag">Best value · Save 25%</span></span>
+          <span class="plan-price">375 ETB<span class="plan-rate"> / month</span></span>
+          <span class="plan-rate">Billed once for the full term</span>
+          <span class="plan-total">4,500 ETB total</span>
+        </span>
+      </label>
+    </fieldset>
+  </section>
+
   <section class="container layout">
     <div class="card" id="receipt-card">
-      <div class="kicker"><span>STEP 02</span><span>SUBMIT RECEIPT</span></div>
+      <div class="kicker"><span>STEP 03</span><span>SEND RECEIPT</span></div>
       <h2>Send your payment screenshot</h2>
-      <p class="sub">Already paid? Fill in your details and pick your confirmation screenshot. Then continue to Telegram and send it in the chat.</p>
+      <p class="sub">Already paid? Fill in your details and choose your confirmation screenshot. Then continue to Telegram and attach it in the chat.</p>
       <div class="alert" id="status" role="status" aria-live="polite"></div>
 
       <form id="receipt-form" novalidate>
@@ -229,14 +312,14 @@ h1.display em{font-style:normal;background:linear-gradient(90deg,var(--red),var(
         <input class="hp" type="text" id="website" tabindex="-1" autocomplete="off" aria-hidden="true">
         <button type="submit" class="btn" id="submit" disabled><span class="spinner"></span><span id="submit-label">Continue to Telegram</span></button>
       </form>
-      <p class="note">Your screenshot goes privately to the site owner only. Access is confirmed after manual review.</p>
+      <p class="note">Your screenshot is only previewed on this device; this page does not upload it. Attach it directly in Telegram. The owner reviews payments manually and sends an access code after verification.</p>
     </div>
 
     <aside class="transfer" aria-labelledby="transfer-title">
       <div class="top"><span>ONE-TIME PAYMENT</span><span>G.</span></div>
       <h2 id="transfer-title">Transfer details</h2>
       <p class="intro">Choose either method, then keep the confirmation screenshot.</p>
-      <h2 id="transfer-title">Yonatan Assefa</h2>
+      <h3 class="recipient">Yonatan Assefa</h3>
       <div class="opt">
         <span class="label">MOBILE WALLET</span><strong>Telebirr</strong>
         <span class="num">0934419964</span>
@@ -248,7 +331,7 @@ h1.display em{font-style:normal;background:linear-gradient(90deg,var(--red),var(
         <button class="copy" data-copy="1000470109665" type="button">Copy</button>
       </div>
       <div class="manual"><span class="sym" aria-hidden="true">↗</span><p><strong>Personally reviewed.</strong> Every receipt is checked by hand. No automatic approval, no recurring charges.</p></div>
-      <div class="foot"><span>GERRARD / ACCESS</span><span>ONE TIME · FOREVER</span></div>
+      <div class="foot"><span>GERRARD / ACCESS</span><span>ONE TIME · MANUAL RENEWAL</span></div>
     </aside>
   </section>
 </main>
@@ -276,6 +359,12 @@ h1.display em{font-style:normal;background:linear-gradient(90deg,var(--red),var(
   var TELEGRAM_USER = "xyoni";
   var MAX_BYTES     = 5 * 1024 * 1024;
   var ALLOWED       = ["image/jpeg","image/png","image/webp"];
+  var PLANS = {
+    "1-month": {label:"1 Month", months:1, total:"500 ETB", summary:"Flexible plan"},
+    "3-months": {label:"3 Months", months:3, total:"1,400 ETB", rate:"467 ETB/month"},
+    "5-months": {label:"5 Months", months:5, total:"2,200 ETB", rate:"440 ETB/month"},
+    "1-year": {label:"1 Year", months:12, total:"4,500 ETB", rate:"375 ETB/month"}
+  };
 
   var $ = function(id){return document.getElementById(id);};
   var form=$("receipt-form"), file=$("file"), drop=$("drop"), preview=$("preview"),
@@ -283,6 +372,22 @@ h1.display em{font-style:normal;background:linear-gradient(90deg,var(--red),var(
       submit=$("submit"), status=$("status");
   var selected=null, objectUrl=null;
   $("year").textContent=new Date().getFullYear();
+
+  function selectedPlan(){
+    var radio=document.querySelector('input[name="plan"]:checked');
+    return radio ? PLANS[radio.value] : null;
+  }
+  function updatePlanSummary(){
+    var radio=document.querySelector('input[name="plan"]:checked');
+    var plan=selectedPlan();
+    if(!radio||!plan) return;
+    var detail=plan.summary ? " · "+plan.summary : " · "+plan.rate;
+    $("selected-plan-summary").textContent="Selected: "+plan.label+detail+" · "+plan.total+" total";
+  }
+  document.querySelectorAll('input[name="plan"]').forEach(function(radio){
+    radio.addEventListener("change",updatePlanSummary);
+  });
+  updatePlanSummary();
 
   /* Theme + nav */
   $("themeToggle").addEventListener("click",function(){
@@ -343,14 +448,20 @@ h1.display em{font-style:normal;background:linear-gradient(90deg,var(--red),var(
     var name=$("name").value.trim(), contact=$("contact").value.trim();
     if(!name||!contact) return show("err","Please enter your name and Telegram or phone number.");
     if(!selected) return show("err","Please choose your payment screenshot first.");
+    var plan=selectedPlan();
+    if(!plan) return show("err","Please choose an access plan first.");
 
     var msg=[
-      "Hello, I have made the payment for portfolio access.",
+      "Hello, I have made a one-time payment for portfolio access.",
+      "Selected plan: "+plan.label,
+      "Access duration: "+plan.months+" month"+(plan.months===1?"":"s"),
+      plan.rate ? "Rate: "+plan.rate : "Plan: Flexible",
+      "Amount paid: "+plan.total,
       "Name: "+name,
       "Contact: "+contact,
       "Paid with: "+$("method").value,
       "Transaction ID: "+($("ref").value.trim()||"-"),
-      "My payment screenshot is attached below."
+      "I will attach my payment screenshot in this Telegram chat. Please review the payment manually and issue a "+plan.months+"-month access code if confirmed."
     ].join("\n");
 
     var url="https://t.me/"+TELEGRAM_USER+"?text="+encodeURIComponent(msg);

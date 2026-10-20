@@ -34,11 +34,19 @@
 
     var membershipResult = await client
       .from("memberships")
-      .select("user_id")
+      .select("user_id,expires_at")
       .eq("user_id", sessionResult.data.session.user.id)
       .maybeSingle();
     if(membershipResult.error) throw membershipResult.error;
     if(!membershipResult.data) throw new Error("Portfolio access has not been approved.");
+
+    var expiresAt = membershipResult.data.expires_at;
+    if(expiresAt !== null){
+      var expiryTime = Date.parse(expiresAt);
+      if(!Number.isFinite(expiryTime) || expiryTime <= Date.now()){
+        throw new Error("Portfolio access has expired.");
+      }
+    }
 
     document.documentElement.style.visibility = "";
   }
