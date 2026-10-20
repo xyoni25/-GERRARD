@@ -1,0 +1,13 @@
+{
+  "name": "website-to-pdf",
+  "version": "1.0.0",
+  "description": "Generate a single PDF from local website HTML files",
+  "main": "scripts/generate_pdf.js",
+  "scripts": {
+    "generate-pdf": "node scripts/generate_pdf.js"
+  },
+  "dependencies": {
+    "pdf-lib": "^1.17.1",
+    "puppeteer": "^20.0.0"
+  }
+}
